@@ -23,7 +23,9 @@ interface DenpaPlayer<T : DenpaTrack> {
     val playMode: MutableState<PlayMode>
     val queue: MutableState<LinkedList<T>>
     val playlist: MutableState<MutableList<T>>
-    val currentTrack: MutableState<DenpaTrack?>
+    val currentTrack: MutableState<T?>
+    val volume: MutableState<Float>
+    val position: Long get() = -1L
 
     fun create()
 
@@ -48,6 +50,12 @@ interface DenpaPlayer<T : DenpaTrack> {
     fun resume()
 
     fun stop()
+
+    fun setVolume(volume: Float) {
+        this.volume.value = volume
+    }
+
+    fun seek(position: Long)
 
     fun shutdown()
 }

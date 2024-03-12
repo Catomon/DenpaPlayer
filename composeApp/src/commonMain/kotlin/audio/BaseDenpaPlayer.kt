@@ -11,7 +11,8 @@ abstract class BaseDenpaPlayer<T : DenpaTrack> : DenpaPlayer<T> {
         mutableStateOf(DenpaPlayer.PlayMode.PLAYLIST)
     override val queue: MutableState<LinkedList<T>> = mutableStateOf(LinkedList<T>())
     override val playlist: MutableState<MutableList<T>> = mutableStateOf(mutableListOf<T>())
-    override val currentTrack: MutableState<DenpaTrack?> = mutableStateOf(null)
+    override val currentTrack: MutableState<T?> = mutableStateOf(null)
+    override val volume: MutableState<Float> = mutableStateOf(0.5f)
 
     override fun create() {
 
@@ -57,7 +58,7 @@ abstract class BaseDenpaPlayer<T : DenpaTrack> : DenpaPlayer<T> {
 
         currentTrack.value = track
 
-        return track as T?
+        return track
     }
 
     /** Depending on [playMode], finds next track and sets to [currentTrack]; does not start playback */
@@ -70,13 +71,14 @@ abstract class BaseDenpaPlayer<T : DenpaTrack> : DenpaPlayer<T> {
                 DenpaPlayer.PlayMode.REPEAT_PLAYLIST -> {
                     val oldIndex = playlist.value.indexOf(oldTrack)
                     playlist.value.getOrNull(
-                        if (oldIndex < playlist.value.size)
+                        if (oldIndex < playlist.value.size - 1)
                             playlist.value.indexOf(oldTrack) + 1 else 0
                     )
                 }
-                DenpaPlayer.PlayMode.PLAYLIST, DenpaPlayer.PlayMode.ONCE, DenpaPlayer.PlayMode.REPEAT_TRACK -> {
+                DenpaPlayer.PlayMode.PLAYLIST, DenpaPlayer.PlayMode.ONCE -> {
                     playlist.value.getOrNull(playlist.value.indexOf(oldTrack) + 1)
                 }
+                DenpaPlayer.PlayMode.REPEAT_TRACK -> oldTrack
             }
         } else {
             queue.value.poll()
@@ -84,7 +86,7 @@ abstract class BaseDenpaPlayer<T : DenpaTrack> : DenpaPlayer<T> {
 
         currentTrack.value = track
 
-        return track as T?
+        return track
     }
 
     /** Sets previous track as current, does not start playback */
@@ -108,6 +110,14 @@ abstract class BaseDenpaPlayer<T : DenpaTrack> : DenpaPlayer<T> {
         currentTrack.value = null
         playState.value = DenpaPlayer.PlayState.IDLE
     }
+
+//    override fun seek(position: Float) {
+//        val currentTrack = currentTrack.value ?: return
+//
+//        if (currentTrack.duration > 0) {
+//            currentTrack.position = position
+//        }
+//    }
 
     override fun shutdown() {
 

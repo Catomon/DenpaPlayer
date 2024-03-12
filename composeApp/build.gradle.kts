@@ -14,7 +14,7 @@ kotlin {
             }
         }
     }
-    
+
     jvm("desktop")
     
     sourceSets {
@@ -34,6 +34,7 @@ kotlin {
             implementation(compose.runtime)
             implementation(compose.foundation)
             implementation(compose.material)
+            implementation(compose.material3)
             implementation(compose.ui)
             implementation(compose.components.resources)
             implementation(compose.components.uiToolingPreview)
@@ -100,6 +101,8 @@ compose.desktop {
 
             windows {
                 iconFile.set(project.file("denpa.ico"))
+                packageVersion = "1.0.0"
+                shortcut = true
             }
         }
     }

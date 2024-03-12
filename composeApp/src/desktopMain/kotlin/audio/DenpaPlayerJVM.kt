@@ -1,7 +1,6 @@
 package audio
 
 import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler
-import com.sedmelluq.discord.lavaplayer.player.AudioPlayer
 import com.sedmelluq.discord.lavaplayer.player.event.AudioEvent
 import com.sedmelluq.discord.lavaplayer.player.event.AudioEventListener
 import com.sedmelluq.discord.lavaplayer.player.event.PlayerPauseEvent
@@ -21,7 +20,8 @@ class DenpaTrackJVM(
     override val id: String = UUID.randomUUID().toString(),
     val audioTrack: AudioTrack,
     override val author: String = audioTrack.info.author,
-    override val name: String = audioTrack.info.title
+    override val name: String = audioTrack.trackName,
+    override val duration: Long = audioTrack.duration
 ) : DenpaTrack {
 
     constructor(audioTrack: AudioTrack) : this(
@@ -29,7 +29,7 @@ class DenpaTrackJVM(
         audioTrack.info.identifier,
         audioTrack,
         audioTrack.info.author,
-        audioTrack.info.title
+        audioTrack.trackName
     )
 }
 
@@ -37,6 +37,7 @@ class DenpaPlayerJVM : BaseDenpaPlayer<DenpaTrackJVM>() {
     private val loader = DenpaLoader(DenpaLoadResulHandler())
     private val stream = DenpaStream(loader.createAudioInputStream())
     private val audioEventListener = DenpaAudioEventListener()
+    override val position: Long get() = loader.player.playingTrack?.position ?: 0L
 
     init {
         startDiscordRich()
@@ -115,6 +116,17 @@ class DenpaPlayerJVM : BaseDenpaPlayer<DenpaTrackJVM>() {
         loader.player.stopTrack()
     }
 
+    override fun setVolume(volume: Float) {
+        super.setVolume(volume)
+
+        loader.player.volume = (200 * volume).toInt()
+    }
+
+    override fun seek(position: Long) {
+        val audio = loader.player.playingTrack ?: return
+        if (!audio.isSeekable) return
+        audio.position = position
+    }
 
     override fun shutdown() {
         super.shutdown()

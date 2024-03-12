@@ -1,15 +1,9 @@
 package audio
 
 import android.content.Context
-import android.net.Uri
-import android.webkit.URLUtil
 import androidx.media3.common.MediaItem
 import androidx.media3.common.Player
 import androidx.media3.exoplayer.ExoPlayer
-import java.net.URI
-import java.net.URL
-import java.util.LinkedList
-import java.util.Queue
 import java.util.UUID
 
 /** Under construct */
@@ -31,6 +25,7 @@ class AndyDenpaTrack(
 
 class DenpaPlayerAndy(context: Context) : BaseDenpaPlayer<AndyDenpaTrack>() {
     private val player: ExoPlayer = ExoPlayer.Builder(context).build()
+    override val position: Long get() = player.contentPosition
 
     init {
         player.addListener(object : Player.Listener {
@@ -134,6 +129,10 @@ class DenpaPlayerAndy(context: Context) : BaseDenpaPlayer<AndyDenpaTrack>() {
 
         if (player.isCommandAvailable(Player.COMMAND_STOP))
             player.stop()
+    }
+
+    override fun seek(position: Long) {
+        player.seekTo(position)
     }
 
     override fun shutdown() {

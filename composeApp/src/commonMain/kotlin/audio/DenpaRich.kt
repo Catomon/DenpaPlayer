@@ -68,7 +68,16 @@ val singers: Array<Singer> = arrayOf(
 @OptIn(ExperimentalResourceApi::class)
 val denpaSinger = Singer("Denpa").icons("denpa").res(Res.drawable.denpa)
 
-val AudioTrack.trackName: String get() = info.author + " - " + info.title
+val AudioTrack.trackInfo: String get() = info.author + " - " + info.title
+
+val AudioTrack.trackName: String
+    get() = if (info.title != "Unknown title") info.title
+    else identifier.substring(identifier.lastIndexOf('\\') + 1)
+
+val DenpaTrack.songAuthorPlusTitle get() = "$author - $name"
+
+fun registeredSingerBySongName(track: DenpaTrack): Singer =
+    registeredSingerBySongName(track.songAuthorPlusTitle)
 
 fun registeredSingerBySongName(songName: String = "Denpa"): Singer {
     if (songName == "Denpa" || songName == "") return denpaSinger
@@ -85,7 +94,7 @@ fun registeredSingerBySongName(songName: String = "Denpa"): Singer {
 fun discordRich(rich: Rich, track: AudioTrack?) {
     if (discordRichDisabled) return
 
-    val singer = registeredSingerBySongName(track?.trackName ?: "Denpa")
+    val singer = registeredSingerBySongName(track?.trackInfo ?: "Denpa")
     val singerName = singer.names.first()
     val singerIconId = singer.iconIds.random()
 
