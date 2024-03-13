@@ -10,7 +10,7 @@ abstract class BaseDenpaPlayer<T : DenpaTrack> : DenpaPlayer<T> {
     override val playMode: MutableState<DenpaPlayer.PlayMode> =
         mutableStateOf(DenpaPlayer.PlayMode.PLAYLIST)
     override val queue: MutableState<LinkedList<T>> = mutableStateOf(LinkedList<T>())
-    override val playlist: MutableState<MutableList<T>> = mutableStateOf(mutableListOf<T>())
+    override val playlist: MutableState<MutableList<T>> = mutableStateOf(mutableListOf())
     override val currentTrack: MutableState<T?> = mutableStateOf(null)
     override val volume: MutableState<Float> = mutableStateOf(0.5f)
 
@@ -45,7 +45,6 @@ abstract class BaseDenpaPlayer<T : DenpaTrack> : DenpaPlayer<T> {
 
     /** Sets previous track in [playlist] as [currentTrack] if [queue] in not empty.
      * Does not start playback */
-    @Suppress("UNCHECKED_CAST")
     override fun prevTrack(): T? {
         val oldTrack = currentTrack.value
         val track = if (queue.value.isEmpty()) {
@@ -62,7 +61,6 @@ abstract class BaseDenpaPlayer<T : DenpaTrack> : DenpaPlayer<T> {
     }
 
     /** Depending on [playMode], finds next track and sets to [currentTrack]; does not start playback */
-    @Suppress("UNCHECKED_CAST")
     override fun nextTrack(): T? {
         val oldTrack = currentTrack.value
         val track = if (queue.value.isEmpty()) {
@@ -75,9 +73,10 @@ abstract class BaseDenpaPlayer<T : DenpaTrack> : DenpaPlayer<T> {
                             playlist.value.indexOf(oldTrack) + 1 else 0
                     )
                 }
-                DenpaPlayer.PlayMode.PLAYLIST, DenpaPlayer.PlayMode.ONCE -> {
+
+                DenpaPlayer.PlayMode.PLAYLIST, DenpaPlayer.PlayMode.ONCE ->
                     playlist.value.getOrNull(playlist.value.indexOf(oldTrack) + 1)
-                }
+
                 DenpaPlayer.PlayMode.REPEAT_TRACK -> oldTrack
             }
         } else {
@@ -89,7 +88,8 @@ abstract class BaseDenpaPlayer<T : DenpaTrack> : DenpaPlayer<T> {
         return track
     }
 
-    /** Sets previous track as current, does not start playback */
+    /** Sets [playState] to [DenpaPlayer.PlayState.PAUSED].
+     * Or to [DenpaPlayer.PlayState.IDLE] if [currentTrack] is null */
     override fun pause() {
         if (currentTrack.value != null)
             playState.value = DenpaPlayer.PlayState.PAUSED

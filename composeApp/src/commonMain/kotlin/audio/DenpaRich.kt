@@ -71,8 +71,8 @@ val denpaSinger = Singer("Denpa").icons("denpa").res(Res.drawable.denpa)
 val AudioTrack.trackInfo: String get() = info.author + " - " + info.title
 
 val AudioTrack.trackName: String
-    get() = if (info.title != "Unknown title") info.title
-    else identifier.substring(identifier.lastIndexOf('\\') + 1)
+    get() = if (info.uri.contains("https://")) info.title
+    else identifier.substring(identifier.lastIndexOf('\\') + 1).removeSuffix(".mp3")
 
 val DenpaTrack.songAuthorPlusTitle get() = "$author - $name"
 

@@ -43,6 +43,9 @@ class DenpaPlayerJVM : BaseDenpaPlayer<DenpaTrackJVM>() {
         startDiscordRich()
         discordRich(Rich.IDLE, null)
         loader.addAudioEventListener(audioEventListener)
+
+        val nipah = ClassLoader.getSystemClassLoader().getResource("nipah.mp3")?.toURI().toString()
+        loader.playerManager.loadItem(nipah, EmptyAudioResultHandler())
     }
 
     override fun create() {
@@ -214,5 +217,12 @@ class DenpaPlayerJVM : BaseDenpaPlayer<DenpaTrackJVM>() {
 
             updateRich()
         }
+    }
+
+    private class EmptyAudioResultHandler : AudioLoadResultHandler {
+        override fun trackLoaded(track: AudioTrack?) {}
+        override fun playlistLoaded(playlist: AudioPlaylist?) {}
+        override fun noMatches() {}
+        override fun loadFailed(exception: FriendlyException?) {}
     }
 }

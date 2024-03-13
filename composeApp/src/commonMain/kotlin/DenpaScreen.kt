@@ -84,11 +84,7 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 fun DenpaScreen(modifier: Modifier = Modifier, topBar: @Composable (() -> Unit)?) {
     MaterialTheme(typography = Typography(FontFamily(Font(Res.font.BadComic_Regular)))) {
         Box(modifier) { //.background(Color(33, 13, 51))
-            Column(Modifier.align(Alignment.BottomCenter)) {
-                //topBar?.invoke()
-                Player(Modifier.fillMaxSize())
-            }
-
+            Player(Modifier.fillMaxSize())
             topBar?.invoke()
         }
     }
@@ -140,7 +136,7 @@ fun Player(modifier: Modifier = Modifier) {
     val playState by remember { denpaPlayer.playState }
     val playMode by remember { denpaPlayer.playMode }
 
-    Box(modifier.background(almostWhiteGray)) {
+    Box(modifier.background(Color.White)) {
         DenpaImage(
             currentTrack,
             modifier = Modifier.align(Alignment.BottomEnd).padding(bottom = 25.dp)
@@ -150,7 +146,7 @@ fun Player(modifier: Modifier = Modifier) {
             denpaPlayer,
             playlist,
             currentTrack,
-            Modifier.align(Alignment.CenterStart).padding(start = 5.dp).fillMaxSize()
+            Modifier.align(Alignment.CenterStart).fillMaxSize()
         )
 
         Row(
@@ -168,11 +164,11 @@ fun Player(modifier: Modifier = Modifier) {
         ) {
             Column {
                 CurrentTrackHeader(
+                    denpaPlayer,
                     currentTrack,
                     playState == DenpaPlayer.PlayState.PLAYING,
                     Modifier.fillMaxWidth()
                 )
-                TrackProgressIndicator(denpaPlayer, currentTrack)
             }
         }
     }
@@ -311,17 +307,40 @@ val lightPinkHalfTransparent = Color(255, 158, 242, 255 / 2)
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun CurrentTrackHeader(currentTrack: DenpaTrack?, playing: Boolean, modifier: Modifier = Modifier) {
-    var songAuthor by remember { mutableStateOf("") }
+fun CurrentTrackHeader(
+    denpaPlayer: DenpaPlayer<DenpaTrack>,
+    currentTrack: DenpaTrack?,
+    playing: Boolean,
+    modifier: Modifier = Modifier
+) {
     var songName by remember { mutableStateOf("") }
     if (currentTrack != null) {
-        songAuthor = currentTrack.author
-        songName = currentTrack.name
+        songName = currentTrack.name.replace(" - ", " ~ ")
     }
-    //, playState: DenpaPlayer.PlayState
-    //if (playState == DenpaPlayer.PlayState.PLAYING) animatedColor else Color.Black
-    Row(modifier.background(slightlyTransparentWhite)) {
-        //val color by remember { mutableStateOf(Color.Black) }
+    var progress by remember { mutableStateOf(0f) }
+    val updateProgress = {
+        progress = when (currentTrack) {
+            null -> 0f
+            else -> if (currentTrack.duration > 0 && currentTrack.duration < Long.MAX_VALUE)
+                denpaPlayer.position.toFloat() / currentTrack.duration else 1f
+        }
+    }
+    LaunchedEffect(currentTrack) {
+        while (true) {
+            delay(1000)
+            if (denpaPlayer.playState.value == DenpaPlayer.PlayState.PLAYING)
+                updateProgress()
+        }
+    }
+    Column(modifier.background(slightlyTransparentWhite)
+        .pointerInput(currentTrack) {
+            if (currentTrack == null) return@pointerInput
+            val width = this.size.width
+            detectTapGestures {
+                denpaPlayer.seek((currentTrack.duration * (it.x / width)).toLong())
+                updateProgress()
+            }
+        }) {
         val infiniteTransition = rememberInfiniteTransition()
         val animatedColor by infiniteTransition.animateColor(
             initialValue = lightPink,
@@ -334,13 +353,19 @@ fun CurrentTrackHeader(currentTrack: DenpaTrack?, playing: Boolean, modifier: Mo
         ) {
             Row {
                 Text(
-                    "$songAuthor ~ $songName",
+                    songName,
                     color = animatedColor2,
                     maxLines = 1,
                     modifier = Modifier.basicMarquee().padding(start = 5.dp)
                 )
             }
         }
+        LinearProgressIndicator(
+            progress = progress,
+            color = pink,
+            backgroundColor = lightPinkHalfTransparent,
+            modifier = Modifier.fillMaxWidth()
+        )
     }
 }
 
@@ -363,10 +388,13 @@ fun Playlist(
                 Spacer(Modifier.size(60.dp))
             }
             itemsIndexed(playlist) { i, track ->
-                Text(track.name,
-                    Modifier.clickable { player.play(playlist[i]) }
+                Box(Modifier.background(if (currentTrack == track) lightPinkHalfTransparent else Color.Transparent)) {
+                    Text(track.name, Modifier
+                        .clickable { player.play(playlist[i]) }
                         .fillMaxWidth()
-                        .background(if (currentTrack == track) lightPinkHalfTransparent else Color.Transparent))
+                        .padding(start = 5.dp)
+                    )
+                }
             }
             item(key = "bottom spacer") {
                 Spacer(Modifier.size(35.dp))
@@ -396,8 +424,8 @@ fun TopPanel(exitApp: () -> Unit, minimize: () -> Unit) {
         Modifier.fillMaxWidth().height(25.dp).background(slightlyTransparentWhite)
     ) { //.background(Color.LightGray)
         Text(
-            "DenpaPlayer",
-            modifier = Modifier.padding(horizontal = 3.dp).align(Alignment.TopStart)
+            "電波プレーヤー",
+            modifier = Modifier.padding(horizontal = 4.dp).align(Alignment.TopStart)
         )
 
         val minimizeImage = imageResource(Res.drawable.minimize_window)
@@ -426,32 +454,15 @@ fun TopPanel(exitApp: () -> Unit, minimize: () -> Unit) {
 }
 
 @Composable
-fun TrackProgressIndicator(denpaPlayer: DenpaPlayer<DenpaTrack>, denpaTrack: DenpaTrack?) {
-    var progress by remember { mutableStateOf(0f) }
-    val updateProgress = {
-        progress = when (denpaTrack) {
-            null -> 0f
-            else -> if (denpaTrack.duration > 0 && denpaTrack.duration < Long.MAX_VALUE)
-                denpaPlayer.position.toFloat() / denpaTrack.duration else 1f
-        }
-    }
-    LaunchedEffect(denpaTrack) {
-        while (true) {
-            delay(1000)
-            if (denpaPlayer.playState.value == DenpaPlayer.PlayState.PLAYING)
-                updateProgress()
-        }
-    }
+fun ClickableProgressIndicator(key1: Any?, progress: Float, onClick: (newProgress: Float) -> Unit) {
     LinearProgressIndicator(
         progress = progress,
         color = pink,
         backgroundColor = lightPinkHalfTransparent,
-        modifier = Modifier.fillMaxWidth().pointerInput(denpaTrack) {
-            if (denpaTrack == null) return@pointerInput
+        modifier = Modifier.fillMaxWidth().pointerInput(key1) {
             val width = this.size.width
             detectTapGestures {
-                denpaPlayer.seek((denpaTrack.duration * (it.x / width)).toLong())
-                updateProgress()
+                onClick(it.x / width)
             }
         }
     )

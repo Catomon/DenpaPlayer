@@ -27,8 +27,6 @@ kotlin {
         commonMain.dependencies {
             implementation("com.darkrockstudios:mpfilepicker:3.1.0")
             implementation("com.github.Vatuu:discord-rpc:1.6.2")
-            implementation("org.slf4j:slf4j-api:1.7.30")
-            implementation("org.slf4j:slf4j-simple:1.6.1")
             implementation("dev.arbjerg:lavaplayer:2.1.1")
 
             implementation(compose.runtime)
@@ -40,6 +38,8 @@ kotlin {
             implementation(compose.components.uiToolingPreview)
         }
         desktopMain.dependencies {
+            implementation("org.slf4j:slf4j-api:2.0.7")
+            implementation("org.slf4j:slf4j-simple:2.0.7")
             implementation(compose.desktop.currentOs)
         }
     }
@@ -91,17 +91,17 @@ compose.desktop {
         nativeDistributions {
             targetFormats(TargetFormat.Msi) //TargetFormat.Dmg,, TargetFormat.Deb
             packageName = "com.github.catomon.denpaplayer"
-            packageVersion = "1.0.0"
+            packageVersion = "1.0.1"
 
             modules("java.compiler", "java.instrument", "java.naming", "java.scripting", "java.security.jgss", "java.sql", "jdk.management", "jdk.unsupported")
 
             buildTypes.release.proguard {
                 configurationFiles.from(project.file("compose-desktop.pro"))
+                isEnabled = false
             }
 
             windows {
                 iconFile.set(project.file("denpa.ico"))
-                packageVersion = "1.0.0"
                 shortcut = true
             }
         }
