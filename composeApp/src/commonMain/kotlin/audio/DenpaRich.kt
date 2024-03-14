@@ -62,13 +62,29 @@ val singers: Array<Singer> = arrayOf(
     Singer(arrayOf("Nanahira", "ななひら")).res(Res.drawable.nanahira),
     Singer(arrayOf("Toromi", "とろ美")).res(Res.drawable.toromi),
     Singer("ひぐらしのなく頃に", "Higurashi").icons("higurashi", "higurashi_satoko")
-        .res(Res.drawable.higurashi)
+        .res(Res.drawable.higurashi),
+    Singer("33.turbo"),
+    Singer("Choko"),
+    Singer("doubleeleven UpperCut"),
+    Singer("KoronePochi", "ころねぽち", "PochiKorone"),
+    Singer("Haruko Momoi"),
+    Singer("Innocent Key"),
+    Singer("IOSYS"),
+    Singer("Koko"),
+    Singer("Momobako"),
+    Singer("MOSAIC.WAV"), 
+    Singer("nayuta"),
+    Singer("yuu", "Installing!!!"),
+    Singer("東方", "Touhou").icons("touhou", "touhou_2", "touhou_3"),
+    Singer("Mili"),
 )
 
-@OptIn(ExperimentalResourceApi::class)
-val denpaSinger = Singer("Denpa").icons("denpa").res(Res.drawable.denpa)
+private const val defaultSingerName: String = "waves"
 
-val AudioTrack.trackInfo: String get() = info.author + " - " + info.title
+@OptIn(ExperimentalResourceApi::class)
+val denpaSinger = Singer(defaultSingerName).icons("denpa").res(Res.drawable.denpa)
+
+private val AudioTrack.trackInfoString: String get() = info.author + " - " + info.title + " - " + info.uri
 
 val AudioTrack.trackName: String
     get() = if (info.uri.contains("https://")) info.title
@@ -79,8 +95,8 @@ val DenpaTrack.songAuthorPlusTitle get() = "$author - $name"
 fun registeredSingerBySongName(track: DenpaTrack): Singer =
     registeredSingerBySongName(track.songAuthorPlusTitle)
 
-fun registeredSingerBySongName(songName: String = "Denpa"): Singer {
-    if (songName == "Denpa" || songName == "") return denpaSinger
+fun registeredSingerBySongName(songName: String = defaultSingerName): Singer {
+    if (songName == defaultSingerName || songName == "") return denpaSinger
 
     singers.forEach { singer ->
         if (singer.names.any { it.containedIn(songName) != "" }) {
@@ -94,7 +110,7 @@ fun registeredSingerBySongName(songName: String = "Denpa"): Singer {
 fun discordRich(rich: Rich, track: AudioTrack?) {
     if (discordRichDisabled) return
 
-    val singer = registeredSingerBySongName(track?.trackInfo ?: "Denpa")
+    val singer = registeredSingerBySongName(track?.trackInfoString ?: defaultSingerName)
     val singerName = singer.names.first()
     val singerIconId = singer.iconIds.random()
 
@@ -102,7 +118,7 @@ fun discordRich(rich: Rich, track: AudioTrack?) {
         when (rich) {
             Rich.IDLE -> {
                 largeImageKey = "denpa"
-                largeImageText = "DenpaPlayer"
+                largeImageText = "電波プレーヤー"
                 smallImageKey = "idle"
                 smallImageText = "Idle"
                 details = "Idle"
@@ -114,6 +130,7 @@ fun discordRich(rich: Rich, track: AudioTrack?) {
                 smallImageKey = "playing"
                 smallImageText = "Listening"
                 details = "Listening to $singerName"
+                endTimestamp = System.currentTimeMillis() + (track?.duration ?: Long.MAX_VALUE) - (track?.position ?: 0L)
             }
 
             Rich.PAUSED -> {

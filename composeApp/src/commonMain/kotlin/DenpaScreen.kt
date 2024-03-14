@@ -49,6 +49,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
@@ -61,6 +62,7 @@ import denpaplayer.composeapp.generated.resources.Res
 import denpaplayer.composeapp.generated.resources.menu
 import denpaplayer.composeapp.generated.resources.minimize_window
 import denpaplayer.composeapp.generated.resources.next
+import denpaplayer.composeapp.generated.resources.nurse_back
 import denpaplayer.composeapp.generated.resources.pause
 import denpaplayer.composeapp.generated.resources.play
 import denpaplayer.composeapp.generated.resources.playlist
@@ -81,12 +83,24 @@ import org.jetbrains.compose.ui.tooling.preview.Preview
 @OptIn(ExperimentalResourceApi::class)
 @Composable
 @Preview
-fun DenpaScreen(modifier: Modifier = Modifier, topBar: @Composable (() -> Unit)?) {
-    MaterialTheme(typography = Typography(FontFamily(Font(Res.font.BadComic_Regular)))) {
-        Box(modifier) { //.background(Color(33, 13, 51))
-            Player(Modifier.fillMaxSize())
-            topBar?.invoke()
-        }
+fun DenpaScreen(
+    denpaPlayer: DenpaPlayer<DenpaTrack>,
+    playlist: MutableList<DenpaTrack>,
+    currentTrack: DenpaTrack?,
+    playState: DenpaPlayer.PlayState,
+    playMode: DenpaPlayer.PlayMode,
+    modifier: Modifier = Modifier, topBar: @Composable (() -> Unit)?
+) {
+    Box(modifier) { //.background(Color(33, 13, 51))
+        Player(
+            denpaPlayer,
+            playlist,
+            currentTrack,
+            playState,
+            playMode,
+            Modifier.fillMaxSize()
+        )
+        topBar?.invoke()
     }
 }
 
@@ -94,10 +108,23 @@ fun DenpaScreen(modifier: Modifier = Modifier, topBar: @Composable (() -> Unit)?
 @Composable
 @Preview
 fun DenpaScreen(modifier: Modifier = Modifier) {
+    val denpaPlayer = remember { createDenpaPlayer }
+    val playlist by remember { denpaPlayer.playlist }
+    val currentTrack by remember { denpaPlayer.currentTrack }
+    val playState by remember { denpaPlayer.playState }
+    val playMode by remember { denpaPlayer.playMode }
+
     MaterialTheme(typography = Typography(FontFamily(Font(Res.font.BadComic_Regular)))) {
         Box(modifier) {
             Column {
-                Player(Modifier.fillMaxSize())
+                Player(
+                    denpaPlayer,
+                    playlist,
+                    currentTrack,
+                    playState,
+                    playMode,
+                    Modifier.fillMaxSize()
+                )
             }
         }
     }
@@ -108,9 +135,6 @@ fun DenpaScreen(modifier: Modifier = Modifier) {
 fun ImageButton(playing: DrawableResource, modifier: Modifier = Modifier, onClick: () -> Unit) {
     Image(painterResource(playing), null, modifier.clickable { onClick() })
 }
-
-val slightlyTransparentWhite = Color(255, 255, 255, 230)
-val halfTransparentWhite = Color(255, 255, 255, 255 / 2)
 
 @OptIn(ExperimentalResourceApi::class)
 @Composable
@@ -127,20 +151,32 @@ fun DenpaImage(currentTrack: DenpaTrack?, modifier: Modifier = Modifier) {
 
 val almostWhiteGray = Color(240, 240, 240)
 
+@OptIn(ExperimentalResourceApi::class)
 @Composable
 @Preview
-fun Player(modifier: Modifier = Modifier) {
-    val denpaPlayer = remember { createDenpaPlayer }
-    val playlist by remember { denpaPlayer.playlist }
-    val currentTrack by remember { denpaPlayer.currentTrack }
-    val playState by remember { denpaPlayer.playState }
-    val playMode by remember { denpaPlayer.playMode }
-
+fun Player(
+    denpaPlayer: DenpaPlayer<DenpaTrack>,
+    playlist: MutableList<DenpaTrack>,
+    currentTrack: DenpaTrack?,
+    playState: DenpaPlayer.PlayState,
+    playMode: DenpaPlayer.PlayMode,
+    fillMaxSize: Modifier,
+    modifier: Modifier = Modifier,
+) {
     Box(modifier.background(Color.White)) {
-        DenpaImage(
-            currentTrack,
-            modifier = Modifier.align(Alignment.BottomEnd).padding(bottom = 25.dp)
+        Image(
+            painterResource(Res.drawable.nurse_back),
+            null,
+            modifier = Modifier.fillMaxWidth(),
+            contentScale = ContentScale.FillWidth,
+            alignment = Alignment.TopCenter,
+            alpha = 0.7f
         )
+
+//        DenpaImage(
+//            currentTrack,
+//            modifier = Modifier.align(Alignment.BottomEnd).padding(bottom = 25.dp)
+//        )
 
         Playlist(
             denpaPlayer,
@@ -149,28 +185,34 @@ fun Player(modifier: Modifier = Modifier) {
             Modifier.align(Alignment.CenterStart).fillMaxSize()
         )
 
-        Row(
-            horizontalArrangement = Arrangement.SpaceBetween,
-            modifier = Modifier.fillMaxWidth().align(Alignment.BottomCenter).height(25.dp)
-                .background(slightlyTransparentWhite)
-        ) {
-            PlaybackButtons(playState, playMode, denpaPlayer)
-            PlaylistButtons(denpaPlayer)
-        }
+
+        BottomBar(denpaPlayer, modifier = Modifier.fillMaxWidth().align(Alignment.BottomCenter))
 
         AnimatedVisibility(
             currentTrack != null,
             modifier = Modifier.fillMaxWidth().align(Alignment.TopCenter).padding(top = 25.dp)
         ) {
-            Column {
-                CurrentTrackHeader(
-                    denpaPlayer,
-                    currentTrack,
-                    playState == DenpaPlayer.PlayState.PLAYING,
-                    Modifier.fillMaxWidth()
-                )
-            }
+            CurrentTrackHeader(
+                denpaPlayer,
+                currentTrack,
+                playState == DenpaPlayer.PlayState.PLAYING,
+                Modifier.fillMaxWidth()
+            )
         }
+    }
+}
+
+@Composable
+fun BottomBar(denpaPlayer: DenpaPlayer<DenpaTrack>, modifier: Modifier = Modifier) {
+    Column(modifier.height(55.dp)) {
+        PlaybackButtons(
+            denpaPlayer,
+            Modifier.height(30.dp).fillMaxWidth().background(halfTransparentWhite)
+        )
+        PlaylistButtons(
+            denpaPlayer,
+            Modifier.height(25.dp).fillMaxWidth().background(slightlyTransparentWhite)
+        )
     }
 }
 
@@ -205,11 +247,11 @@ fun PlaylistButtons(denpaPlayer: DenpaPlayer<DenpaTrack>, modifier: Modifier = M
 @OptIn(ExperimentalResourceApi::class, ExperimentalMaterial3Api::class)
 @Composable
 fun PlaybackButtons(
-    playState: DenpaPlayer.PlayState,
-    playMode: DenpaPlayer.PlayMode,
     denpaPlayer: DenpaPlayer<DenpaTrack>,
     modifier: Modifier = Modifier
 ) {
+    val playState by denpaPlayer.playState
+    val playMode by denpaPlayer.playMode
     Row(modifier) {
         PlayerButton(Res.drawable.prev) {
             denpaPlayer.prevTrack()
@@ -267,16 +309,16 @@ fun PlaybackButtons(
         var volume by remember { mutableStateOf(0.5f) }
         val interactionSource = MutableInteractionSource()
         val colors = SliderDefaults.colors(
-            Color.DarkGray,
-            Color.DarkGray,
-            Color.DarkGray,
-            Color.DarkGray,
-            Color.DarkGray,
-            Color.DarkGray,
-            Color.DarkGray,
-            Color.DarkGray,
-            Color.DarkGray,
-            Color.DarkGray
+            Color.Black,
+            Color.Black,
+            Color.Black,
+            Color.Black,
+            Color.Black,
+            Color.Black,
+            Color.Black,
+            Color.Black,
+            Color.Black,
+            Color.Black
         )
         Slider(
             value = volume,
@@ -299,7 +341,10 @@ fun PlaybackButtons(
     }
 }
 
+val slightlyTransparentWhite = Color(255, 255, 255, 230)
+val halfTransparentWhite = Color(255, 255, 255, 255 / 2)
 val lightBlue = Color(2, 158, 224)
+val halfTransparentLightBlue = Color(56, 196, 255, 255 / 2)
 val pink = Color(255, 117, 236)
 val deepPink = Color(153, 0, 132)
 val lightPink = Color(255, 158, 242)
@@ -311,7 +356,8 @@ fun CurrentTrackHeader(
     denpaPlayer: DenpaPlayer<DenpaTrack>,
     currentTrack: DenpaTrack?,
     playing: Boolean,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    showTrackName: Boolean = true
 ) {
     var songName by remember { mutableStateOf("") }
     if (currentTrack != null) {
@@ -327,12 +373,12 @@ fun CurrentTrackHeader(
     }
     LaunchedEffect(currentTrack) {
         while (true) {
-            delay(1000)
             if (denpaPlayer.playState.value == DenpaPlayer.PlayState.PLAYING)
                 updateProgress()
+            delay(1000)
         }
     }
-    Column(modifier.background(slightlyTransparentWhite)
+    Column(modifier.background(slightlyTransparentWhite).fillMaxWidth()
         .pointerInput(currentTrack) {
             if (currentTrack == null) return@pointerInput
             val width = this.size.width
@@ -348,15 +394,17 @@ fun CurrentTrackHeader(
             animationSpec = infiniteRepeatable(tween(700), RepeatMode.Reverse),
         )
         val animatedColor2 by animateColorAsState(if (playing) animatedColor else Color.Black)
-        AnimatedContent(
-            songName
-        ) {
-            Row {
+        AnimatedVisibility(showTrackName) {
+            AnimatedContent(
+                songName,
+                contentAlignment = Alignment.Center,
+                modifier = Modifier.height(25.dp).fillMaxWidth()
+            ) {
                 Text(
                     songName,
                     color = animatedColor2,
                     maxLines = 1,
-                    modifier = Modifier.basicMarquee().padding(start = 5.dp)
+                    modifier = Modifier.basicMarquee().padding(horizontal = 5.dp)
                 )
             }
         }
@@ -388,6 +436,9 @@ fun Playlist(
                 Spacer(Modifier.size(60.dp))
             }
             itemsIndexed(playlist) { i, track ->
+                if (currentTrack == track) {
+
+                }
                 Box(Modifier.background(if (currentTrack == track) lightPinkHalfTransparent else Color.Transparent)) {
                     Text(track.name, Modifier
                         .clickable { player.play(playlist[i]) }
@@ -397,13 +448,13 @@ fun Playlist(
                 }
             }
             item(key = "bottom spacer") {
-                Spacer(Modifier.size(35.dp))
+                Spacer(Modifier.size(60.dp))
             }
         }
 
         VerticalScrollbar(
             modifier = Modifier.align(Alignment.CenterEnd).fillMaxHeight()
-                .padding(top = 25.dp, bottom = 25.dp, end = 4.dp),
+                .padding(top = 25.dp, bottom = 55.dp, end = 4.dp),
             adapter = rememberScrollbarAdapter(
                 scrollState = listState
             )
@@ -414,7 +465,7 @@ fun Playlist(
 @OptIn(ExperimentalResourceApi::class)
 @Composable
 fun PlayerButton(image: DrawableResource, modifier: Modifier = Modifier, onClick: () -> Unit) {
-    ImageButton(image, modifier.size(25.dp), onClick)
+    ImageButton(image, modifier.size(50.dp), onClick)
 }
 
 @OptIn(ExperimentalResourceApi::class)

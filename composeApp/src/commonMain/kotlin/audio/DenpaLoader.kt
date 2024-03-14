@@ -6,9 +6,6 @@ import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager
 import com.sedmelluq.discord.lavaplayer.player.event.AudioEventListener
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers
-import com.sedmelluq.discord.lavaplayer.tools.FriendlyException
-import com.sedmelluq.discord.lavaplayer.track.AudioPlaylist
-import com.sedmelluq.discord.lavaplayer.track.AudioTrack
 import javax.sound.sampled.AudioInputStream
 
 class DenpaLoader(
@@ -41,7 +38,7 @@ class DenpaLoader(
     }
 
     fun loadItem(identifier: String) {
-        playerManager.loadItem(identifier, resultHandler)
+        playerManager.loadItemSync(identifier, resultHandler)
     }
 
     fun createAudioInputStream(): AudioInputStream =

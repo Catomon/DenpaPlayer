@@ -48,6 +48,8 @@ abstract class BaseDenpaPlayer<T : DenpaTrack> : DenpaPlayer<T> {
     override fun prevTrack(): T? {
         val oldTrack = currentTrack.value
         val track = if (queue.value.isEmpty()) {
+            if (playlist.value.isEmpty()) return null
+
             val oldIndex = playlist.value.indexOf(oldTrack)
             playlist.value.getOrNull(
                 if (oldIndex > 0 && oldIndex < playlist.value.size)
@@ -64,6 +66,8 @@ abstract class BaseDenpaPlayer<T : DenpaTrack> : DenpaPlayer<T> {
     override fun nextTrack(): T? {
         val oldTrack = currentTrack.value
         val track = if (queue.value.isEmpty()) {
+            if (playlist.value.isEmpty()) return null
+
             when (playMode.value) {
                 DenpaPlayer.PlayMode.RANDOM -> playlist.value.random()
                 DenpaPlayer.PlayMode.REPEAT_PLAYLIST -> {

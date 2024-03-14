@@ -44,8 +44,10 @@ class DenpaPlayerJVM : BaseDenpaPlayer<DenpaTrackJVM>() {
         discordRich(Rich.IDLE, null)
         loader.addAudioEventListener(audioEventListener)
 
-        val nipah = ClassLoader.getSystemClassLoader().getResource("nipah.mp3")?.toURI().toString()
-        loader.playerManager.loadItem(nipah, EmptyAudioResultHandler())
+//        val nipah = ClassLoader.getSystemClassLoader().getResource("nipah.mp3")?.toURI().toString()
+//        loader.playerManager.loadItem(nipah, EmptyAudioResultHandler())
+
+        setVolume(0.5f)
     }
 
     override fun create() {
@@ -122,7 +124,7 @@ class DenpaPlayerJVM : BaseDenpaPlayer<DenpaTrackJVM>() {
     override fun setVolume(volume: Float) {
         super.setVolume(volume)
 
-        loader.player.volume = (200 * volume).toInt()
+        loader.player.volume = (110 * volume).toInt()
     }
 
     override fun seek(position: Long) {
