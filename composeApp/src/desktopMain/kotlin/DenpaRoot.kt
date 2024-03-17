@@ -16,6 +16,7 @@ import androidx.compose.ui.awt.ComposeWindow
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.pointer.PointerEventType
 import androidx.compose.ui.input.pointer.onPointerEvent
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.unit.Density
@@ -43,21 +44,17 @@ import java.awt.geom.RoundRectangle2D
 @OptIn(ExperimentalResourceApi::class, ExperimentalComposeUiApi::class)
 @Composable
 fun ApplicationScope.DenpaRoot() {
-    val denpaPlayer = remember { createDenpaPlayer }
-    val playlist by remember { denpaPlayer.playlist }
-    val currentTrack by remember { denpaPlayer.currentTrack }
-    val playState by remember { denpaPlayer.playState }
-    val playMode by remember { denpaPlayer.playMode }
+    val denpaState = remember { DenpaState() }
 
     val playerWindowState = rememberWindowState(
         width = 320.dp, height = 400.dp, position = WindowPosition(Alignment.Center),
     )
 
     MaterialTheme(typography = Typography(FontFamily(Font(Res.font.BadComic_Regular)))) {
-        PlayerWindow(denpaPlayer, playlist, currentTrack, playState, playMode, playerWindowState)
+        PlayerWindow(denpaState, playerWindowState)
 
         if (playerWindowState.isMinimized) {
-            TrackHeaderWindow(denpaPlayer) { playerWindowState.isMinimized = false }
+            TrackHeaderWindow(denpaState.denpaPlayer) { playerWindowState.isMinimized = false }
         }
 
         Tray(
@@ -78,18 +75,14 @@ val Density.headerMaxSize get() = DpSize(screenWidth.toDp(), 29.dp)
 @OptIn(ExperimentalResourceApi::class)
 @Composable
 fun ApplicationScope.PlayerWindow(
-    denpaPlayer: DenpaPlayer<DenpaTrack>,
-    playlist: MutableList<DenpaTrack>,
-    currentTrack: DenpaTrack?,
-    playState: DenpaPlayer.PlayState,
-    playMode: DenpaPlayer.PlayMode,
-    state: WindowState
+    denpaState: DenpaState,
+    windowState: WindowState
 ) {
     Window(
         onCloseRequest = ::exitApplication,
-        title = "DenpaPlayer",
+        title = appName,
         resizable = true,
-        state = state,
+        state = windowState,
         undecorated = true,
         icon = painterResource(Res.drawable.denpa),
     ) {
@@ -100,21 +93,20 @@ fun ApplicationScope.PlayerWindow(
 //                .onEach {  }
 //        }
 
-        window.minimumSize = Dimension(320, 108)
+        window.minimumSize = Dimension(minWindowWidth, minWindowHeight)
 
         val exitApp = ::exitApplication
 
         val minimize = {
-            state.isMinimized = state.isMinimized.not()
+            windowState.isMinimized = windowState.isMinimized.not()
         }
 
         DenpaScreen(
-            denpaPlayer,
-            playlist,
-            currentTrack,
-            playState,
-            playMode,
-            Modifier.fillMaxSize().border(1.8.dp, Color.Black, RoundedCornerShape(10.dp))
+            denpaState,
+            Modifier.fillMaxSize().border(1.8.dp, Color.Black, RoundedCornerShape(10.dp)).onGloballyPositioned {
+                denpaState.height = it.size.height
+                denpaState.width = it.size.width
+            }
         ) {
             WindowDraggableArea {
                 TopPanel(exitApp, minimize)
@@ -135,7 +127,7 @@ fun TrackHeaderWindow(denpaPlayer: DenpaPlayer<DenpaTrack>, onCloseRequest: () -
 
     Window(
         onCloseRequest = onCloseRequest,
-        title = "Song header",
+        title = "Track Progress",
         resizable = false,
         undecorated = true,
         //transparent = true,
@@ -164,10 +156,10 @@ fun TrackHeaderWindow(denpaPlayer: DenpaPlayer<DenpaTrack>, onCloseRequest: () -
 
 class ShapeOnResize(val window: ComposeWindow) : ComponentAdapter() {
     override fun componentResized(e: java.awt.event.ComponentEvent?) {
-        val width = if (window.width > 600)
-            600 else window.width
-        val height = if (window.height > 900)
-            900 else window.height
+        val width = if (window.width > maxWindowWidth)
+            maxWindowWidth else window.width
+        val height = if (window.height > maxWindowHeight)
+            maxWindowHeight else window.height
         window.setSize(width, height)
 
         window.shape = RoundRectangle2D.Double(

@@ -17,15 +17,20 @@ import java.awt.Window
 import java.awt.event.MouseAdapter
 import java.awt.event.MouseEvent
 import java.awt.event.MouseMotionAdapter
+import java.io.File
+
+actual val userDataFolder: File = File(System.getProperty("user.home"), "AppData/Roaming/DenpaPlayer")
 
 @Composable
-actual fun DenpaFilePicker(show: MutableState<Boolean>, denpaPlayer: DenpaPlayer<DenpaTrack>) {
+actual fun DenpaFilePicker(show: MutableState<Boolean>, denpaPlayer: DenpaPlayer<DenpaTrack>, currentPlaylistName: String) {
     val fileType = listOf("mp3")
     MultipleFilePicker(show = show.value, fileExtensions = fileType) { files ->
         show.value = false
         if (files != null) {
             //it.platformFile desk - File, android - Uri
             denpaPlayer.load(files.map { it.path })
+
+            savePlaylist(currentPlaylistName, denpaPlayer.playlist.value.toTypedArray())
         }
     }
 }

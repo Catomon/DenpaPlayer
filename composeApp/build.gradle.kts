@@ -4,6 +4,7 @@ plugins {
     alias(libs.plugins.kotlinMultiplatform)
     alias(libs.plugins.androidApplication)
     alias(libs.plugins.jetbrainsCompose)
+    kotlin("plugin.serialization") version "1.9.22"
 }
 
 kotlin {
@@ -25,6 +26,8 @@ kotlin {
             implementation(libs.androidx.activity.compose)
         }
         commonMain.dependencies {
+            implementation(libs.junit)
+            implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
             implementation("com.darkrockstudios:mpfilepicker:3.1.0")
             implementation("com.github.Vatuu:discord-rpc:1.6.2")
             implementation("dev.arbjerg:lavaplayer:2.1.1")
@@ -58,7 +61,7 @@ android {
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
         versionCode = 1
-        versionName = "1.0"
+        versionName = "1.1.0"
     }
     packaging {
         resources {
@@ -91,7 +94,7 @@ compose.desktop {
         nativeDistributions {
             targetFormats(TargetFormat.Msi) //TargetFormat.Dmg,, TargetFormat.Deb
             packageName = "com.github.catomon.denpaplayer"
-            packageVersion = "1.0.1"
+            packageVersion = "1.1.0"
 
             modules("java.compiler", "java.instrument", "java.naming", "java.scripting", "java.security.jgss", "java.sql", "jdk.management", "jdk.unsupported")
 

@@ -6,6 +6,7 @@ import com.sedmelluq.discord.lavaplayer.player.AudioLoadResultHandler
 import com.sedmelluq.discord.lavaplayer.player.DefaultAudioPlayerManager
 import com.sedmelluq.discord.lavaplayer.player.event.AudioEventListener
 import com.sedmelluq.discord.lavaplayer.source.AudioSourceManagers
+import com.sedmelluq.discord.lavaplayer.source.youtube.YoutubeAudioSourceManager
 import javax.sound.sampled.AudioInputStream
 
 class DenpaLoader(
@@ -16,10 +17,16 @@ class DenpaLoader(
     val playerManager = DefaultAudioPlayerManager()
     val player = playerManager.createPlayer()
 
+    val ytManager = YoutubeAudioSourceManager()
+
     var remoteSourcesRegistered = false
 
     init {
         playerManager.configuration.outputFormat = outputFormat
+
+        //100 tracks per page
+        ytManager.setPlaylistPageCount(20)
+        playerManager.registerSourceManager(ytManager)
         AudioSourceManagers.registerLocalSource(playerManager)
         registerRemoteSources()
     }

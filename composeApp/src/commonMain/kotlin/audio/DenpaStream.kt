@@ -9,30 +9,43 @@ import kotlin.concurrent.thread
 
 class DenpaStream(
     val stream: AudioInputStream,
-    val audioFormat: AudioFormat = stream.format
+    private val audioFormat: AudioFormat = stream.format
 ) {
-    val dataLineInfo = DataLine.Info(SourceDataLine::class.java, audioFormat)
-    val line = AudioSystem.getLine(dataLineInfo) as SourceDataLine
+    private val dataLineInfo = DataLine.Info(SourceDataLine::class.java, audioFormat)
+    private val line: SourceDataLine?
+        get() =
+            if (AudioSystem.isLineSupported(dataLineInfo))
+                AudioSystem.getLine(dataLineInfo) as SourceDataLine?
+            else
+                null
 
     var stop = false
 
     init {
-        line.open(audioFormat)
-        line.start()
-
         thread {
-            var size: Int
-            val buf = ByteArray(audioFormat.channels * 960 * 2)
             while (true) {
-                size = stream.read(buf)
-                if (size >= 0) {
-                    line.write(buf, 0, size)
+                Thread.sleep(1000)
+                while (!AudioSystem.isLineSupported(dataLineInfo)) {
+                    Thread.sleep(1000)
                 }
 
-                if (stop) break
+                val line: SourceDataLine = line ?: continue
+                line.open(audioFormat)
+                line.start()
+
+                var size: Int
+                val buf = ByteArray(audioFormat.channels * 960 * 2)
+                while (line.isOpen) {
+                    size = stream.read(buf)
+                    if (size >= 0) {
+                        line.write(buf, 0, size)
+                    }
+
+                    if (stop) return@thread
+                }
             }
         }.apply {
-            name = "DenpaPlayer"
+            name = "PlayerSourceLineWrite"
         }
     }
 }

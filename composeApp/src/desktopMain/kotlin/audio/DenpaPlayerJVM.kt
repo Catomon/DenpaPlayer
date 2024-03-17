@@ -197,7 +197,10 @@ class DenpaPlayerJVM : BaseDenpaPlayer<DenpaTrackJVM>() {
                 is TrackEndEvent -> {
                     @Suppress("WHEN_ENUM_CAN_BE_NULL_IN_JAVA")
                     when (event.endReason) {
-                        AudioTrackEndReason.FINISHED -> nextTrack()
+                        AudioTrackEndReason.FINISHED -> {
+                            if (playMode.value != DenpaPlayer.PlayMode.ONCE)
+                                nextTrack()
+                        }
                         AudioTrackEndReason.LOAD_FAILED -> {
                             nextTrack()
                         }
