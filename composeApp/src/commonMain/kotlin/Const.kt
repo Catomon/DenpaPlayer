@@ -1,5 +1,5 @@
 
-const val appName = "電波プレーヤー"
+const val appName = "DenpaPlayer"
 
 const val minWindowHeight = 108
 const val minWindowWidth = 320

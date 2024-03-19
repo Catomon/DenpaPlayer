@@ -9,6 +9,10 @@ import java.io.File
 
 actual val userDataFolder: File get() = File((playerContext() as MainActivity).filesDir.toURI())
 
+actual fun <T : DenpaTrack> createDenpaTrack(uri: String, name: String): T {
+    TODO("Not yet implemented")
+}
+
 @Composable
 actual fun DenpaFilePicker(show: MutableState<Boolean>, denpaPlayer: DenpaPlayer<DenpaTrack>, currentPlaylistName: String) {
     val fileType = listOf("mp3")

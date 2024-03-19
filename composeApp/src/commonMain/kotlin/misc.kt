@@ -7,7 +7,23 @@ import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.toSize
+import audio.DenpaTrack
 import kotlin.math.roundToInt
+
+expect fun <T : DenpaTrack> createDenpaTrack(uri: String, name: String): T
+
+fun isValidFileName(name: String): Boolean {
+    val forbiddenNames = listOf(
+        "CON", "PRN", "AUX", "NUL",
+        "COM1", "COM2", "COM3", "COM4", "COM5", "COM6", "COM7", "COM8", "COM9", "COM0",
+        "LPT1", "LPT2", "LPT3", "LPT4", "LPT5", "LPT6", "LPT7", "LPT8", "LPT9", "LPT0"
+    )
+    val specialChars = listOf("<", ">", ":", "\"", "/", "\\", "|", "?", "*")
+
+    return !(forbiddenNames.any { name.contains(it, true) } || specialChars.any {
+        name.contains(it, true)
+    })
+}
 
 private val smoothPaint = Paint().apply {
     filterQuality = FilterQuality.High
@@ -17,7 +33,7 @@ private val smoothPaint = Paint().apply {
     }
 }
 
-class SmoothPainter (
+class SmoothPainter(
     private val image: ImageBitmap,
     private val srcOffset: IntOffset = IntOffset.Zero,
     private val srcSize: IntSize = IntSize(image.width, image.height),

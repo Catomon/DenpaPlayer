@@ -10,6 +10,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.window.WindowScope
 import audio.DenpaPlayer
 import audio.DenpaTrack
+import audio.DenpaTrackJVM
 import com.darkrockstudios.libraries.mpfilepicker.MultipleFilePicker
 import java.awt.MouseInfo
 import java.awt.Point
@@ -20,6 +21,10 @@ import java.awt.event.MouseMotionAdapter
 import java.io.File
 
 actual val userDataFolder: File = File(System.getProperty("user.home"), "AppData/Roaming/DenpaPlayer")
+
+actual fun <T : DenpaTrack> createDenpaTrack(uri: String, name: String): T {
+    return DenpaTrackJVM(uri = uri, name = name) as T
+}
 
 @Composable
 actual fun DenpaFilePicker(show: MutableState<Boolean>, denpaPlayer: DenpaPlayer<DenpaTrack>, currentPlaylistName: String) {

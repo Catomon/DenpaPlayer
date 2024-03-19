@@ -18,16 +18,22 @@ import java.util.UUID
 class DenpaTrackJVM(
     override val uri: String,
     override val id: String = UUID.randomUUID().toString(),
-    val audioTrack: AudioTrack,
-    override val author: String = audioTrack.info.author,
-    override val name: String = audioTrack.trackName,
-    override val duration: Long = audioTrack.duration
+    override var author: String = "",
+    override var name: String = "",
+    override var duration: Long = Long.MAX_VALUE
 ) : DenpaTrack {
+
+    var audioTrack: AudioTrack? = null
+        set(value) {
+            field = value
+            author = audioTrack?.info?.author ?: ""
+            name = audioTrack?.trackName ?: ""
+            duration = audioTrack?.duration ?: Long.MAX_VALUE
+        }
 
     constructor(audioTrack: AudioTrack) : this(
         audioTrack.info.uri,
         audioTrack.info.identifier,
-        audioTrack,
         audioTrack.info.author,
         audioTrack.trackName
     )
@@ -61,14 +67,20 @@ class DenpaPlayerJVM : BaseDenpaPlayer<DenpaTrackJVM>() {
     }
 
     override fun play(track: DenpaTrackJVM): Boolean {
-        return loader.player.startTrack(track.audioTrack.makeClone(), false) and super.play(track)
+        if (track.audioTrack == null) {
+            super.play(track)
+            load(listOf(track.uri))
+            return true
+        }
+
+        return loader.player.startTrack(track.audioTrack!!.makeClone(), false) and super.play(track)
     }
 
     override fun prevTrack(): DenpaTrackJVM? {
         val nextDenpaTrack = super.prevTrack()
 
         loader.player.stopTrack()
-        loader.player.playTrack(nextDenpaTrack?.audioTrack?.makeClone())
+        play(nextDenpaTrack ?: return null)
 
         return nextDenpaTrack
     }
@@ -77,7 +89,7 @@ class DenpaPlayerJVM : BaseDenpaPlayer<DenpaTrackJVM>() {
         val nextDenpaTrack = super.nextTrack()
 
         loader.player.stopTrack()
-        loader.player.playTrack(nextDenpaTrack?.audioTrack?.makeClone())
+        play(nextDenpaTrack ?: return null)
 
         return nextDenpaTrack
     }
@@ -144,6 +156,13 @@ class DenpaPlayerJVM : BaseDenpaPlayer<DenpaTrackJVM>() {
 
     inner class DenpaLoadResulHandler : AudioLoadResultHandler {
         override fun trackLoaded(track: AudioTrack) {
+            if (currentTrack.value != null && currentTrack.value?.uri == track.info.uri) {
+                currentTrack.value?.audioTrack = track
+                play(currentTrack.value!!)
+
+                return
+            }
+
             addToPlaylist(DenpaTrackJVM(track))
         }
 

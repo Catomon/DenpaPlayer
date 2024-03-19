@@ -78,7 +78,8 @@ val singers: Array<Singer> = arrayOf(
     Singer("yuu", "Installing!!!"),
     Singer("東方", "Touhou").icons("touhou", "touhou_2", "touhou_3"),
     Singer("Mili"),
-    Singer("The Living Tombstone")
+    Singer("The Living Tombstone"),
+    Singer("GLAD VALAKAS", "BLEAK FUFEL", "Glad Valakas", "Bleak Fufel", "Глад Валакас")
 )
 
 private const val defaultSingerName: String = appName

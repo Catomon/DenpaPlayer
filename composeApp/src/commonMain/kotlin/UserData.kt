@@ -25,7 +25,7 @@ fun savePlaylist(name: String, tracks: Array<DenpaTrack>) {
         playlistsFolder.mkdirs()
 
     val file = File(userDataFolder.path + "/playlists/$name.pl")
-    val playlistData = PlaylistData(tracks.map { it.uri }.toTypedArray())
+    val playlistData = PlaylistData(tracks.map { TrackData(it.uri, it.name) }.toTypedArray())
     if (!file.exists()) {
         file.createNewFile()
     }
@@ -59,6 +59,13 @@ data class UserData(
 
 @Serializable
 data class PlaylistData(
-    val tracks: Array<String>,
+    val tracks: Array<TrackData>,
+    val isOnline: Boolean = false
+)
+
+@Serializable
+data class TrackData(
+    val uri: String,
+    val name: String,
     val isOnline: Boolean = false
 )
