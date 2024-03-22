@@ -1,5 +1,7 @@
+const val appNameJp = "電波プレーヤー"
+const val appNameEng = "DenpaPlayer"
 
-const val appName = "DenpaPlayer"
+var appName = if (loadSettings().japaneseTitle) appNameJp else appNameEng
 
 const val minWindowHeight = 108
 const val minWindowWidth = 320

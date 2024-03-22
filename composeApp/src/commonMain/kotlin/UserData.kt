@@ -6,6 +6,44 @@ import java.io.File
 
 expect val userDataFolder: File
 
+fun saveSettings(settings: UserSettings) {
+    try {
+    val settingsFolder = File(userDataFolder.path)
+    if (!settingsFolder.exists())
+        settingsFolder.mkdirs()
+
+    val file = File(userDataFolder.path + "/settings.json")
+    if (!file.exists()) {
+        file.createNewFile()
+    }
+    file.writeText(Json.encodeToString(settings))
+
+    } catch (e: Exception) {
+        e.printStackTrace()
+    }
+}
+
+fun loadSettings() : UserSettings {
+    try {
+        val settingsFile = File(userDataFolder.path + "/settings.json")
+        if (settingsFile.exists())
+            return Json.decodeFromString(settingsFile.readText())
+    } catch (e: Exception) {
+        e.printStackTrace()
+    }
+    return UserSettings()
+}
+
+@Serializable
+class UserSettings(
+    var showTrackProgressBar: Boolean = true,
+    var discordIntegration: Boolean = true,
+    var japaneseTitle: Boolean = false,
+    var darkTheme: Boolean = false,
+    var alwaysOnTop: Boolean = false
+)
+
+//Playlists
 val playlistsFolder get() = userDataFolder.path + "/playlists/"
 
 fun removePlaylist(name: String) {

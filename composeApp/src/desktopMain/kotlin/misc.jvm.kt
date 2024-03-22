@@ -28,7 +28,7 @@ actual fun <T : DenpaTrack> createDenpaTrack(uri: String, name: String): T {
 
 @Composable
 actual fun DenpaFilePicker(show: MutableState<Boolean>, denpaPlayer: DenpaPlayer<DenpaTrack>, currentPlaylistName: String) {
-    val fileType = listOf("mp3")
+    val fileType = listOf("mp3", "wav")
     MultipleFilePicker(show = show.value, fileExtensions = fileType) { files ->
         show.value = false
         if (files != null) {

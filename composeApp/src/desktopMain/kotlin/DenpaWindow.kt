@@ -5,6 +5,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.Typography
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -30,9 +31,13 @@ import androidx.compose.ui.window.WindowState
 import androidx.compose.ui.window.rememberWindowState
 import audio.DenpaPlayer
 import audio.DenpaTrack
+import audio.discordRichDisabled
 import denpaplayer.composeapp.generated.resources.BadComic_Regular
 import denpaplayer.composeapp.generated.resources.Res
 import denpaplayer.composeapp.generated.resources.denpa
+import denpaplayer.composeapp.generated.resources.pause
+import denpaplayer.composeapp.generated.resources.play
+import net.arikia.dev.drpc.DiscordRPC
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.Font
 import org.jetbrains.compose.resources.painterResource
@@ -43,24 +48,34 @@ import java.awt.geom.RoundRectangle2D
 
 @OptIn(ExperimentalResourceApi::class, ExperimentalComposeUiApi::class)
 @Composable
-fun ApplicationScope.DenpaRoot() {
+fun ApplicationScope.DenpaApp() {
     val denpaState = remember { DenpaState() }
 
     val playerWindowState = rememberWindowState(
         width = 320.dp, height = 400.dp, position = WindowPosition(Alignment.Center),
     )
 
-    MaterialTheme(typography = Typography(FontFamily(Font(Res.font.BadComic_Regular)))) {
+    MaterialTheme(
+        typography = Typography(FontFamily(Font(Res.font.BadComic_Regular)))
+    ) {
         PlayerWindow(denpaState, playerWindowState)
 
-        if (playerWindowState.isMinimized) {
-            TrackHeaderWindow(denpaState.denpaPlayer) { playerWindowState.isMinimized = false }
+        if (playerWindowState.isMinimized && denpaState.settings.showTrackProgressBar) {
+            TrackProgressBarWindow(denpaState.denpaPlayer) { playerWindowState.isMinimized = false }
         }
 
         Tray(
-            icon = painterResource(Res.drawable.denpa),
+            icon = if (denpaState.playState == DenpaPlayer.PlayState.PLAYING)
+                painterResource(Res.drawable.pause)
+            else
+                painterResource(Res.drawable.play),
             tooltip = "DenpaPlayer",
-            onAction = { playerWindowState.isMinimized = false },
+            onAction = {
+                if (denpaState.playState == DenpaPlayer.PlayState.PLAYING)
+                    denpaState.denpaPlayer.pause()
+                else
+                    denpaState.denpaPlayer.resume()
+            },
             menu = {
                 Item("Exit", onClick = ::exitApplication)
             },
@@ -78,38 +93,51 @@ fun ApplicationScope.PlayerWindow(
     denpaState: DenpaState,
     windowState: WindowState
 ) {
+
+    var title by remember { mutableStateOf(if (denpaState.settings.japaneseTitle) appNameJp else appNameEng) }
+
+    LaunchedEffect(denpaState.settings) {
+        val setts = loadSettings()
+
+        if (!discordRichDisabled && !setts.discordIntegration)
+            DiscordRPC.discordClearPresence()
+
+        discordRichDisabled = !setts.discordIntegration
+
+        if (setts.darkTheme) Colors.darkTheme() else Colors.whiteTheme()
+
+        title = if (denpaState.settings.japaneseTitle) appNameJp else appNameEng
+    }
+
     Window(
         onCloseRequest = ::exitApplication,
-        title = appName,
+        title = title,
         resizable = true,
         state = windowState,
         undecorated = true,
         icon = painterResource(Res.drawable.denpa),
+        alwaysOnTop = denpaState.settings.alwaysOnTop
     ) {
+
         window.addComponentListener(ShapeOnResize(window))
-
-//        LaunchedEffect(state) {
-//            snapshotFlow { state.size }
-//                .onEach {  }
-//        }
-
         window.minimumSize = Dimension(minWindowWidth, minWindowHeight)
-
         val exitApp = ::exitApplication
-
         val minimize = {
             windowState.isMinimized = windowState.isMinimized.not()
         }
 
         DenpaScreen(
             denpaState,
-            Modifier.fillMaxSize().border(1.8.dp, Color.Black, RoundedCornerShape(10.dp)).onGloballyPositioned {
-                denpaState.height = it.size.height
-                denpaState.width = it.size.width
-            }
+            Modifier.fillMaxSize()
+                .border(1.8.dp, Color.Black, RoundedCornerShape(10.dp))
+                .background(Colors.backgroundPrimary)
+                .onGloballyPositioned {
+                    denpaState.height = it.size.height
+                    denpaState.width = it.size.width
+                }
         ) {
             WindowDraggableArea {
-                TopPanel(exitApp, minimize)
+                TopPanel(denpaState, exitApp, minimize)
             }
         }
     }
@@ -117,7 +145,7 @@ fun ApplicationScope.PlayerWindow(
 
 @OptIn(ExperimentalResourceApi::class, ExperimentalComposeUiApi::class)
 @Composable
-fun TrackHeaderWindow(denpaPlayer: DenpaPlayer<DenpaTrack>, onCloseRequest: () -> Unit) {
+fun TrackProgressBarWindow(denpaPlayer: DenpaPlayer<DenpaTrack>, onCloseRequest: () -> Unit) {
     val state = rememberWindowState(
         size = with(LocalDensity.current) { headerMinSize },
         position = WindowPosition(
@@ -127,7 +155,7 @@ fun TrackHeaderWindow(denpaPlayer: DenpaPlayer<DenpaTrack>, onCloseRequest: () -
 
     Window(
         onCloseRequest = onCloseRequest,
-        title = "Track Progress",
+        title = "Track Progress Bar",
         resizable = false,
         undecorated = true,
         //transparent = true,

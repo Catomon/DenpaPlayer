@@ -1,29 +1,26 @@
 package audio
 
-import appName
+import appNameEng
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack
 import denpaplayer.composeapp.generated.resources.Res
 import denpaplayer.composeapp.generated.resources.denpa
 import denpaplayer.composeapp.generated.resources.higurashi
 import denpaplayer.composeapp.generated.resources.nanahira
 import denpaplayer.composeapp.generated.resources.toromi
+import loadSettings
 import net.arikia.dev.drpc.DiscordEventHandlers
 import net.arikia.dev.drpc.DiscordRPC
 import net.arikia.dev.drpc.DiscordRichPresence
 import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 
-var discordRichDisabled = false
+var discordRichDisabled = !loadSettings().discordIntegration
 
 fun startDiscordRich() {
-    if (discordRichDisabled) return
-
     DiscordRPC.discordInitialize("1211665087912484922", DiscordEventHandlers(), true)
 }
 
 fun stopDiscordRich() {
-    if (discordRichDisabled) return
-
     DiscordRPC.discordShutdown()
 }
 
@@ -62,11 +59,11 @@ class Singer(
 val singers: Array<Singer> = arrayOf(
     Singer(arrayOf("Nanahira", "ななひら")).res(Res.drawable.nanahira),
     Singer(arrayOf("Toromi", "とろ美")).res(Res.drawable.toromi),
-    Singer("ひぐらしのなく頃に", "Higurashi").icons("higurashi", "higurashi_satoko")
+    Singer("ひぐらしのなく頃に", "Higurashi").icons("higurashi", "higurashi_satoko", "higurashi_rena")
         .res(Res.drawable.higurashi),
     Singer("33.turbo"),
     Singer("Choko"),
-    Singer("doubleeleven UpperCut"),
+    Singer("doubleeleven UpperCut", "doubleeleven undercurrent"),
     Singer("KoronePochi", "ころねぽち", "PochiKorone"),
     Singer("Haruko Momoi"),
     Singer("Innocent Key"),
@@ -82,7 +79,7 @@ val singers: Array<Singer> = arrayOf(
     Singer("GLAD VALAKAS", "BLEAK FUFEL", "Glad Valakas", "Bleak Fufel", "Глад Валакас")
 )
 
-private const val defaultSingerName: String = appName
+private const val defaultSingerName: String = appNameEng
 
 @OptIn(ExperimentalResourceApi::class)
 val denpaSinger = Singer(defaultSingerName).icons("denpa").res(Res.drawable.denpa)
@@ -123,7 +120,7 @@ fun discordRich(rich: Rich, track: AudioTrack?) {
         when (rich) {
             Rich.IDLE -> {
                 largeImageKey = "denpa"
-                largeImageText = appName
+                largeImageText = appNameEng
                 smallImageKey = "idle"
                 smallImageText = "Idle"
                 details = "Idle"

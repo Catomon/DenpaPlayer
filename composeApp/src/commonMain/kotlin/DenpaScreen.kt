@@ -11,8 +11,6 @@ import androidx.compose.animation.expandIn
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.shrinkOut
-import androidx.compose.foundation.ContextMenuArea
-import androidx.compose.foundation.ContextMenuItem
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -25,7 +23,6 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -33,16 +30,14 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.Button
 import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.LinearProgressIndicator
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.OutlinedTextField
+import androidx.compose.material.Switch
+import androidx.compose.material.SwitchDefaults
 import androidx.compose.material.Text
 import androidx.compose.material.TextFieldDefaults
 import androidx.compose.material.Typography
@@ -56,17 +51,14 @@ import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.pointer.PointerEventType
-import androidx.compose.ui.input.pointer.onPointerEvent
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.IntSize
@@ -77,6 +69,7 @@ import audio.registeredSingerBySongName
 import audio.songAuthorPlusTitle
 import denpaplayer.composeapp.generated.resources.BadComic_Regular
 import denpaplayer.composeapp.generated.resources.Res
+import denpaplayer.composeapp.generated.resources.denpa_top_icon
 import denpaplayer.composeapp.generated.resources.folder
 import denpaplayer.composeapp.generated.resources.menu
 import denpaplayer.composeapp.generated.resources.minimize_window
@@ -100,8 +93,8 @@ import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.Font
 import org.jetbrains.compose.resources.imageResource
-import org.jetbrains.compose.resources.painterResource
 import org.jetbrains.compose.ui.tooling.preview.Preview
+import kotlin.system.exitProcess
 
 @Composable
 @Preview
@@ -127,8 +120,11 @@ class DenpaState {
     var currentPlaylistName by mutableStateOf("default")
     var showSongUrlInput by mutableStateOf(false)
     var showPlaylistsPane by mutableStateOf(false)
+    var showOptionsPane by mutableStateOf(false)
     var isLoadingPlaylistFile by mutableStateOf(false)
     var isLoadingSong by mutableStateOf<DenpaTrack?>(null)
+
+    var settings by mutableStateOf(loadSettings())
 
     var height by mutableStateOf(0)
     var width by mutableStateOf(0)
@@ -205,7 +201,7 @@ fun Player(
         }
     }
 
-    Box(modifier.background(Color.White)) {
+    Box(modifier.background(Colors.backgroundPrimary)) {
 //        Image(
 //            painterResource(Res.drawable.nurse_back),
 //            null,
@@ -224,6 +220,18 @@ fun Player(
         Playlist(state, Modifier.align(Alignment.CenterStart).fillMaxSize().alpha(alpha))
 
         Box(Modifier.fillMaxSize().padding(bottom = 55.dp)) {
+            AnimatedVisibility(
+                state.showOptionsPane,
+                modifier = Modifier.pointerInput(Unit) {},
+                enter = expandIn(
+                    expandFrom = Alignment.CenterStart,
+                    initialSize = { IntSize(it.width, 0) }) + fadeIn(),
+                exit = shrinkOut(
+                    shrinkTowards = Alignment.CenterStart,
+                    targetSize = { IntSize(it.width, 0) }) + fadeOut()
+            ) {
+                OptionsPane(state)
+            }
             AnimatedVisibility(
                 state.showSongUrlInput,
                 modifier = Modifier.pointerInput(Unit) {},
@@ -269,7 +277,7 @@ fun Player(
 
         AnimatedVisibility(
             state.isLoadingPlaylistFile,
-            Modifier.fillMaxSize().pointerInput(Unit) {}.background(halfTransparentWhite)
+            Modifier.fillMaxSize().pointerInput(Unit) {}.background(Colors.surfaceSecondary)
         ) {
             Column(
                 Modifier.fillMaxSize(),
@@ -277,13 +285,117 @@ fun Player(
                 verticalArrangement = Arrangement.Center
             ) {
                 CircularProgressIndicator(
-                    color = Color.White,
-                    trackColor = Color.Black,
+                    color = Colors.objectBackgroundPrimary,
+                    trackColor = Colors.objectPrimary,
                     modifier = Modifier.size(30.dp)
                 )
-                Text("Loading playlist...")
+                Text("Loading playlist...", color = Colors.textPrimary)
             }
         }
+    }
+}
+
+@Composable
+fun OptionsPane(state: DenpaState) {
+    val settings = state.settings
+    var showTrackBarWin by remember { mutableStateOf(settings.showTrackProgressBar) }
+    var discordIntegration by remember { mutableStateOf(settings.discordIntegration) }
+    var japaneseTitle by remember { mutableStateOf(settings.japaneseTitle) }
+    var darkTheme by remember { mutableStateOf(settings.darkTheme) }
+    var alwaysOnTop by remember { mutableStateOf(settings.alwaysOnTop) }
+
+    Column(
+        Modifier.background(Colors.surfacePrimary).fillMaxSize(),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    )
+    {
+        Spacer(Modifier.size(60.dp))
+
+//        Text("Some might require restart", color = Colors.textPrimary)
+
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("Show track progress bar", color = Colors.textPrimary)
+            Switch(showTrackBarWin, {
+                showTrackBarWin = it
+                settings.showTrackProgressBar = it
+                saveSettings(settings)
+                state.settings = loadSettings()
+            }, colors = SwitchDefaults.colors(checkedThumbColor = Colors.objectPrimary))
+        }
+
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("Discord Integration", color = Colors.textPrimary)
+            Switch(discordIntegration, {
+                discordIntegration = it
+                settings.discordIntegration = it
+                saveSettings(settings)
+                state.settings = loadSettings()
+            }, colors = SwitchDefaults.colors(checkedThumbColor = Colors.objectPrimary))
+        }
+
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("Japanese title", color = Colors.textPrimary)
+            Switch(japaneseTitle, {
+                japaneseTitle = it
+                settings.japaneseTitle = it
+                saveSettings(settings)
+                state.settings = loadSettings()
+            }, colors = SwitchDefaults.colors(checkedThumbColor = Colors.objectPrimary))
+        }
+
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("Dark theme", color = Colors.textPrimary)
+            Switch(darkTheme, {
+                darkTheme = it
+                settings.darkTheme = it
+                saveSettings(settings)
+                state.settings = loadSettings()
+            }, colors = SwitchDefaults.colors(checkedThumbColor = Colors.objectPrimary))
+        }
+
+        Row(verticalAlignment = Alignment.CenterVertically) {
+            Text("Window always on top", color = Colors.textPrimary)
+            Switch(alwaysOnTop, {
+                alwaysOnTop = it
+                settings.alwaysOnTop = it
+                saveSettings(settings)
+                state.settings = loadSettings()
+            }, colors = SwitchDefaults.colors(checkedThumbColor = Colors.objectPrimary))
+        }
+
+        Spacer(Modifier.weight(1f))
+
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(50.dp),
+            verticalAlignment = Alignment.Bottom
+        ) {
+            Text(
+                "Itch.io",
+                color = Colors.textPrimary,
+                fontStyle = FontStyle.Italic,
+                modifier = Modifier.clickable {
+                    openItchIo()
+                })
+
+            Button(
+                { exitProcess(0) },
+                colors = ButtonDefaults.buttonColors(
+                    backgroundColor = Colors.objectPrimary,
+                    contentColor = Colors.textSecondary
+                )
+            ) { Text("Exit App", color = Colors.textSecondary) }
+
+            Text(
+                "GitHub",
+                color = Colors.textPrimary,
+                fontStyle = FontStyle.Italic,
+                modifier = Modifier.clickable {
+                    openGitHub()
+                })
+        }
+
+        Spacer(Modifier.size(6.dp))
     }
 }
 
@@ -292,11 +404,11 @@ fun BottomBar(state: DenpaState, modifier: Modifier = Modifier) {
     Column(modifier.height(55.dp)) {
         PlaybackButtons(
             state.denpaPlayer,
-            Modifier.height(30.dp).fillMaxWidth().background(halfTransparentWhite)
+            Modifier.height(30.dp).fillMaxWidth().background(Colors.surfaceSecondary)
         )
         PlaylistButtons(
             state,
-            Modifier.height(25.dp).fillMaxWidth().background(slightlyTransparentWhite)
+            Modifier.height(25.dp).fillMaxWidth().background(Colors.surfacePrimary)
         )
     }
 }
@@ -308,90 +420,15 @@ expect fun DenpaFilePicker(
     currentPlaylistName: String
 )
 
-@OptIn(ExperimentalResourceApi::class)
 @Composable
-fun PlaylistsPane(state: DenpaState) {
-    var playlists by remember { mutableStateOf(loadPlaylists()) }
-    var newPlaylistName by remember { mutableStateOf("") }
-    var isError by remember { mutableStateOf(false) }
-    val crateNewPlaylist = {
-        state.currentPlaylistName = newPlaylistName
-        savePlaylist(newPlaylistName, emptyArray())
-        playlists = loadPlaylists()
-    }
-    Box(
-        Modifier.fillMaxSize().background(slightlyTransparentWhite).fillMaxSize()
-            .pointerInput(Unit) {}) {
-            LazyColumn {
-                item(key = "top spacer") {
-                    Spacer(Modifier.size(60.dp))
-                }
-                items(playlists) {
-                    ContextMenuArea(items = {
-                        listOf(
-                            ContextMenuItem("Remove") {
-                                removePlaylist(it.first)
-                                if (state.currentPlaylistName == it.first)
-                                    state.currentPlaylistName = "default"
-                                playlists = loadPlaylists()
-                            },
-                        )
-                    }) {
-                        Text(it.first, Modifier.fillMaxWidth().padding(start = 5.dp)
-                            .clickable {
-                                state.currentPlaylistName = it.first
-                                state.showPlaylistsPane = false
-                            }
-                        )
-                    }
-                }
-                item(key = "bottom spacer") {
-                    Spacer(Modifier.size(60.dp))
-                }
-            }
-
-        Row(Modifier.align(Alignment.BottomCenter).padding(6.dp)) {
-            OutlinedTextField(
-                newPlaylistName,
-                onValueChange = { newPlaylistName = it },
-                label = { Text("Playlist Name") },
-                modifier = Modifier.width(300.dp).height(65.dp),
-                singleLine = true,
-                isError = isError,
-                trailingIcon = {
-                    Button(
-                        {
-                            if (isValidFileName(newPlaylistName))
-                                crateNewPlaylist()
-                            else
-                                isError = true
-                        },
-                        modifier = Modifier.width(90.dp).height(42.dp).padding(end = 4.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            backgroundColor = Color.Black,
-                            contentColor = Color.White
-                        )
-                    ) {
-                        Text("Create")
-                    }
-                },
-                colors = TextFieldDefaults.textFieldColors(
-                    backgroundColor = Color.LightGray,
-                    focusedIndicatorColor = Color.Black,
-                    focusedLabelColor = Color.Black
-                )
-            )
-
-        }
-    }
-}
+expect fun PlaylistsPane(state: DenpaState)
 
 @Composable
 fun SongUrlInputPane(state: DenpaState) {
     var url by remember { mutableStateOf("") }
     var loading by remember { mutableStateOf(false) }
     Column(
-        Modifier.background(slightlyTransparentWhite).fillMaxSize(),
+        Modifier.background(Colors.surfacePrimary).fillMaxSize(),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     )
@@ -400,49 +437,55 @@ fun SongUrlInputPane(state: DenpaState) {
             Text(
                 text = "Enter track or playlist url to add them to the current playlist. Make sure its not private or age-restricted.",
                 textAlign = TextAlign.Center,
-                modifier = Modifier.align(Alignment.Center)
+                modifier = Modifier.align(Alignment.Center),
+                color = Colors.textPrimary
             )
         }
-        OutlinedTextField(
-            url,
-            label = { Text("URL") },
-            onValueChange = { text: String -> url = text },
-            singleLine = true,
-            modifier = Modifier.width(300.dp).height(65.dp),
-            colors = TextFieldDefaults.textFieldColors(
-                backgroundColor = Color.LightGray,
-                focusedIndicatorColor = Color.Black,
-                focusedLabelColor = Color.Black
-            ),
-            trailingIcon = {
-                Button(
-                    {
-                        CoroutineScope(Dispatchers.Default).launch {
-                            loading = true
-                            state.denpaPlayer.load(listOf(url))
-                            savePlaylist(state.currentPlaylistName, state.playlist.toTypedArray())
-                            state.showSongUrlInput = false
+        Box(Modifier.padding(6.dp)) {
+            OutlinedTextField(
+                url,
+                label = { Text("URL", color = Colors.textPrimary) },
+                onValueChange = { text: String -> url = text },
+                singleLine = true,
+                modifier = Modifier.width(300.dp).height(65.dp),
+                colors = TextFieldDefaults.textFieldColors(
+                    backgroundColor = Colors.objectBackgroundPrimary,
+                    focusedIndicatorColor = Colors.objectPrimary,
+                    focusedLabelColor = Colors.objectPrimary
+                ),
+                trailingIcon = {
+                    Button(
+                        {
+                            CoroutineScope(Dispatchers.Default).launch {
+                                loading = true
+                                state.denpaPlayer.load(listOf(url))
+                                savePlaylist(
+                                    state.currentPlaylistName,
+                                    state.playlist.toTypedArray()
+                                )
+                                state.showSongUrlInput = false
+                            }
+                        },
+                        Modifier.width(90.dp).height(42.dp).padding(end = 4.dp),
+                        colors = ButtonDefaults.buttonColors(
+                            backgroundColor = Colors.objectPrimary,
+                            contentColor = Colors.textSecondary
+                        )
+                    ) {
+                        AnimatedContent(loading) {
+                            if (it)
+                                CircularProgressIndicator(
+                                    color = Colors.objectBackgroundPrimary,
+                                    trackColor = Colors.objectPrimary,
+                                    modifier = Modifier.size(30.dp)
+                                )
+                            else
+                                Text("Add", color = Colors.textSecondary)
                         }
-                    },
-                    Modifier.width(90.dp).height(42.dp).padding(end = 4.dp),
-                    colors = ButtonDefaults.buttonColors(
-                        backgroundColor = Color.Black,
-                        contentColor = Color.White
-                    )
-                ) {
-                    AnimatedContent(loading) {
-                        if (it)
-                            CircularProgressIndicator(
-                                color = Color.White,
-                                trackColor = Color.Black,
-                                modifier = Modifier.size(30.dp)
-                            )
-                        else
-                            Text("Add")
                     }
-                }
-            },
-        )
+                },
+            )
+        }
     }
 }
 
@@ -459,14 +502,17 @@ fun PlaylistButtons(state: DenpaState, modifier: Modifier = Modifier) {
             "${state.currentPlaylistName}: ${state.playlist.size}",
             modifier = Modifier.weight(1f).padding(start = 5.dp).basicMarquee(),
             maxLines = 1,
+            color = Colors.textPrimary
         )
 //        }
         Image(imageResource(Res.drawable.playlists), "Manage playlists", Modifier.clickable {
             state.showSongUrlInput = false
+            state.showOptionsPane = false
             state.showPlaylistsPane = !state.showPlaylistsPane
         })
         Image(imageResource(Res.drawable.url), "Add tracks by url", Modifier.clickable {
             state.showPlaylistsPane = false
+            state.showOptionsPane = false
             state.showSongUrlInput = !state.showSongUrlInput
         })
         Image(
@@ -543,16 +589,16 @@ fun PlaybackButtons(
         var volume by remember { mutableStateOf(0.5f) }
         val interactionSource = MutableInteractionSource()
         val colors = SliderDefaults.colors(
-            Color.Black,
-            Color.Black,
-            Color.Black,
-            Color.Black,
-            Color.Black,
-            Color.Black,
-            Color.Black,
-            Color.Black,
-            Color.Black,
-            Color.Black
+            Colors.objectPrimary,
+            Colors.objectPrimary,
+            Colors.objectPrimary,
+            Colors.objectPrimary,
+            Colors.objectPrimary,
+            Colors.objectPrimary,
+            Colors.objectPrimary,
+            Colors.objectPrimary,
+            Colors.objectPrimary,
+            Colors.objectPrimary
         )
         Slider(
             value = volume,
@@ -574,15 +620,6 @@ fun PlaybackButtons(
         )
     }
 }
-
-val slightlyTransparentWhite = Color(255, 255, 255, 230)
-val halfTransparentWhite = Color(255, 255, 255, 255 / 2)
-val lightBlue = Color(2, 158, 224)
-val halfTransparentLightBlue = Color(56, 196, 255, 255 / 2)
-val pink = Color(255, 117, 236)
-val deepPink = Color(153, 0, 132)
-val lightPink = Color(255, 158, 242)
-val lightPinkHalfTransparent = Color(255, 158, 242, 255 / 2)
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
@@ -612,7 +649,7 @@ fun CurrentTrackHeader(
             delay(1000)
         }
     }
-    Column(modifier.background(slightlyTransparentWhite).fillMaxWidth()
+    Column(modifier.background(Colors.surfacePrimary).fillMaxWidth()
         .pointerInput(currentTrack) {
             if (currentTrack == null) return@pointerInput
             val width = this.size.width
@@ -623,11 +660,11 @@ fun CurrentTrackHeader(
         }) {
         val infiniteTransition = rememberInfiniteTransition()
         val animatedColor by infiniteTransition.animateColor(
-            initialValue = lightPink,
-            targetValue = lightBlue,
+            initialValue = Colors.textSpecial,
+            targetValue = Colors.textSpecial2,
             animationSpec = infiniteRepeatable(tween(700), RepeatMode.Reverse),
         )
-        val animatedColor2 by animateColorAsState(if (playing) animatedColor else Color.Black)
+        val animatedColor2 by animateColorAsState(if (playing) animatedColor else Colors.textPrimary)
         AnimatedVisibility(showTrackName) {
             AnimatedContent(
                 songName,
@@ -638,108 +675,21 @@ fun CurrentTrackHeader(
                     songName,
                     color = animatedColor2,
                     maxLines = 1,
-                    modifier = Modifier.basicMarquee().padding(horizontal = 5.dp)
+                    modifier = Modifier.basicMarquee().padding(horizontal = 5.dp),
                 )
             }
         }
         LinearProgressIndicator(
             progress = progress,
-            color = pink,
-            backgroundColor = lightPinkHalfTransparent,
+            color = Colors.specialPrimary,
+            backgroundColor = Colors.specialPrimaryTransparent,
             modifier = Modifier.fillMaxWidth()
         )
     }
 }
 
-@OptIn(ExperimentalComposeUiApi::class)
 @Composable
-fun Playlist(
-    state: DenpaState,
-    modifier: Modifier = Modifier
-) {
-    val player: DenpaPlayer<DenpaTrack> = state.denpaPlayer
-    val playlist: MutableList<DenpaTrack> = state.playlist
-    val currentTrack: DenpaTrack? = state.currentTrack
-    val listState = rememberLazyListState()
-    LaunchedEffect(state.currentPlaylistName) {
-        listState.scrollToItem(0)
-    }
-//    LaunchedEffect(currentTrack) {
-//        if (currentTrack != null) {
-//            listState.scrollToItem(playlist.indexOf(currentTrack))
-//        }
-//    }
-    Box(modifier) {
-        val coroutineScope = rememberCoroutineScope()
-        LazyColumn(state = listState, modifier = Modifier.fillMaxWidth()) {
-            item(key = "top spacer") {
-                Spacer(Modifier.size(60.dp))
-            }
-            itemsIndexed(playlist) { i, track ->
-                var hovered by remember { mutableStateOf(false) }
-                ContextMenuArea(items = {
-                    listOf(
-                        ContextMenuItem("Remove") {
-                            coroutineScope.launch {
-                                state.isLoadingSong = track
-                                state.denpaPlayer.removeFromPlaylist(track)
-                                state.denpaPlayer.playlist.value = state.denpaPlayer.playlist.value
-                                savePlaylist(state.currentPlaylistName, state.denpaPlayer.playlist.value.toTypedArray())
-                                //listState.scrollToItem(i, -60)
-                                state.isLoadingSong = null
-                            }
-                        }
-                    )
-                }) {
-                    Box(Modifier.background(if (currentTrack == track) lightPinkHalfTransparent else Color.Transparent)
-                        .onPointerEvent(
-                            PointerEventType.Enter
-                        ) {
-                            hovered = true
-                        }.onPointerEvent(
-                            PointerEventType.Exit
-                        ) {
-                            hovered = false
-                        }) {
-
-                        Text(track.name, Modifier
-                            .clickable {
-                                if (state.isLoadingSong != null) return@clickable
-
-                                CoroutineScope(Dispatchers.Default).launch {
-                                    state.isLoadingSong = track
-                                    player.play(playlist[i])
-                                    state.isLoadingSong = null
-                                }
-                            }
-                            .fillMaxWidth()
-                            .padding(start = 5.dp)
-                        )
-
-                        AnimatedVisibility(
-                            state.isLoadingSong == track,
-                            modifier = Modifier.align(Alignment.CenterEnd).padding(end = 5.dp)
-                        ) {
-                            CircularProgressIndicator(
-                                color = Color.White,
-                                trackColor = Color.Black,
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
-                    }
-                }
-            }
-            item(key = "bottom spacer") {
-                Spacer(Modifier.size(60.dp))
-            }
-        }
-
-        VertScrollbar(
-            listState, Modifier.align(Alignment.CenterEnd).fillMaxHeight()
-                .padding(top = 25.dp, bottom = 55.dp, end = 4.dp)
-        )
-    }
-}
+expect fun Playlist(state: DenpaState, modifier: Modifier = Modifier)
 
 @Composable
 expect fun VertScrollbar(listState: LazyListState, modifier: Modifier)
@@ -752,22 +702,30 @@ fun PlayerButton(image: DrawableResource, modifier: Modifier = Modifier, onClick
 
 @OptIn(ExperimentalResourceApi::class)
 @Composable
-fun TopPanel(exitApp: () -> Unit, minimize: () -> Unit) {
+fun TopPanel(state: DenpaState, exitApp: () -> Unit, minimize: () -> Unit) {
     Box(
-        Modifier.fillMaxWidth().height(25.dp).background(slightlyTransparentWhite)
-    ) { //.background(Color.LightGray)
-        Text(
-            appName,
-            modifier = Modifier.padding(horizontal = 4.dp).align(Alignment.TopStart)
-        )
-
-        val minimizeImage = imageResource(Res.drawable.minimize_window)
-        //val closeImage = imageResource(Res.drawable.close_window)
+        Modifier.fillMaxWidth().height(25.dp).background(Colors.surfacePrimary)
+    ) {
+        Row(
+            modifier = Modifier.padding(horizontal = 4.dp).align(Alignment.TopStart),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Image(
+                imageResource(Res.drawable.denpa_top_icon),
+                null,
+                modifier = Modifier.offset(y = 2.dp)
+            )
+            Text(
+                appName,
+                modifier = Modifier.padding(horizontal = 4.dp),
+                color = Colors.textPrimary
+            )
+        }
 
         Row(modifier = Modifier.align(Alignment.TopEnd)) {
             Row {
                 Image(
-                    remember { SmoothPainter(minimizeImage) },
+                    imageResource(Res.drawable.minimize_window),
                     null,
                     modifier = Modifier.size(25.dp).clickable {
                         minimize()
@@ -775,10 +733,12 @@ fun TopPanel(exitApp: () -> Unit, minimize: () -> Unit) {
                 )
 
                 Image(
-                    painterResource(Res.drawable.menu),
+                    imageResource(Res.drawable.menu),
                     null,
                     modifier = Modifier.size(25.dp).clickable {
-                        exitApp()
+                        state.showPlaylistsPane = false
+                        state.showSongUrlInput = false
+                        state.showOptionsPane = !state.showOptionsPane
                     }
                 )
             }
@@ -790,8 +750,8 @@ fun TopPanel(exitApp: () -> Unit, minimize: () -> Unit) {
 fun ClickableProgressIndicator(key1: Any?, progress: Float, onClick: (newProgress: Float) -> Unit) {
     LinearProgressIndicator(
         progress = progress,
-        color = pink,
-        backgroundColor = lightPinkHalfTransparent,
+        color = Colors.specialPrimary,
+        backgroundColor = Colors.specialPrimaryTransparent,
         modifier = Modifier.fillMaxWidth().pointerInput(key1) {
             val width = this.size.width
             detectTapGestures {
