@@ -1,11 +1,12 @@
-This is a Kotlin Multiplatform project targeting Android, Desktop.
+A learning project I made. Has core functionality like playback mode, playlists etc.
+Can add and play songs/playlists from YouTube.
+Has dark/white themes.
 
-* `/composeApp` is for code that will be shared across your Compose Multiplatform applications.
-  It contains several subfolders:
-  - `commonMain` is for code that’s common for all targets.
-  - Other folders are for Kotlin code that will be compiled for only the platform indicated in the folder name.
-    For example, if you want to use Apple’s CoreCrypto for the iOS part of your Kotlin app,
-    `iosMain` would be the right folder for such calls.
+Windows version is ready. Android needs to work on.
 
-
-Learn more about [Kotlin Multiplatform](https://www.jetbrains.com/help/kotlin-multiplatform-dev/get-started.html)…
+libs:
+  desktop:
+  [lavaplayer](https://github.com/lavalink-devs/lavaplayer) - Audio loading and playback.
+  [discord-rpc](https://github.com/Vatuu/discord-rpc) - discord integration.
+ android:
+ media3-exoplayer - Audio loading and playback.
