@@ -36,7 +36,9 @@ import denpaplayer.composeapp.generated.resources.BadComic_Regular
 import denpaplayer.composeapp.generated.resources.Res
 import denpaplayer.composeapp.generated.resources.denpa
 import denpaplayer.composeapp.generated.resources.pause
+import denpaplayer.composeapp.generated.resources.pause_icon
 import denpaplayer.composeapp.generated.resources.play
+import denpaplayer.composeapp.generated.resources.play_icon
 import net.arikia.dev.drpc.DiscordRPC
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 import org.jetbrains.compose.resources.Font
@@ -66,9 +68,9 @@ fun ApplicationScope.DenpaApp() {
 
         Tray(
             icon = if (denpaState.playState == DenpaPlayer.PlayState.PLAYING)
-                painterResource(Res.drawable.pause)
+                painterResource(Res.drawable.pause_icon)
             else
-                painterResource(Res.drawable.play),
+                painterResource(Res.drawable.play_icon),
             tooltip = "DenpaPlayer",
             onAction = {
                 if (denpaState.playState == DenpaPlayer.PlayState.PLAYING)
