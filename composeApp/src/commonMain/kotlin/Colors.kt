@@ -67,7 +67,7 @@ object Colors {
     val pink0 = Color(255, 232, 239)
     val pink1 = Color(251, 203, 207) //main
     val pink2 = Color(250, 163, 170)
-    val pink2Transparent = Color(251, 203, 207, 200)
+    val pink1Transparent = Color(251, 203, 207, 200)
 
     val red0 = Color(241, 111, 111, 100)
     val red1 = Color(205, 88, 89)
@@ -81,10 +81,10 @@ object Colors {
     fun pinkTheme() {
         backgroundPrimary = pink0
         surfacePrimary = pink1
-        surfaceSecondary = pink2Transparent
+        surfaceSecondary = pink1Transparent
         specialPrimary = red1
         specialSecondary = viol1
-        specialPrimaryTransparent = red0
+        specialPrimaryTransparent = pink1Transparent
         objectPrimary = viol1
         objectBackgroundPrimary = pink0
         textPrimary = viol1
