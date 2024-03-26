@@ -64,6 +64,35 @@ object Colors {
 //    val textSpecial = pink
 //    val textSpecial2 = lightBlue
 
+    val pink0 = Color(255, 232, 239)
+    val pink1 = Color(251, 203, 207) //main
+    val pink2 = Color(250, 163, 170)
+    val pink2Transparent = Color(251, 203, 207, 200)
+
+    val red0 = Color(241, 111, 111, 100)
+    val red1 = Color(205, 88, 89)
+
+    val viol0 = Color(192, 173, 203)
+    val viol1 = Color(108, 85, 157) //main
+
+    val white0 = Color(246, 246, 246)
+    val white1 = Color(205, 203, 219)
+
+    fun pinkTheme() {
+        backgroundPrimary = pink0
+        surfacePrimary = pink1
+        surfaceSecondary = pink2Transparent
+        specialPrimary = red1
+        specialSecondary = viol1
+        specialPrimaryTransparent = red0
+        objectPrimary = viol1
+        objectBackgroundPrimary = pink0
+        textPrimary = viol1
+        textSecondary = Color.White
+        textSpecial = red1
+        textSpecial2 = viol1
+    }
+
     fun whiteTheme() {
         backgroundPrimary = Color.White
         surfacePrimary = slightlyTransparentWhite

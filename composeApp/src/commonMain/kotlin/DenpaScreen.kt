@@ -36,6 +36,8 @@ import androidx.compose.material.ButtonDefaults
 import androidx.compose.material.LinearProgressIndicator
 import androidx.compose.material.MaterialTheme
 import androidx.compose.material.OutlinedTextField
+import androidx.compose.material.RadioButton
+import androidx.compose.material.RadioButtonDefaults
 import androidx.compose.material.Switch
 import androidx.compose.material.SwitchDefaults
 import androidx.compose.material.Text
@@ -56,6 +58,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.ColorFilter
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontStyle
@@ -151,7 +154,12 @@ fun DenpaScreen(modifier: Modifier = Modifier) {
 @OptIn(ExperimentalResourceApi::class)
 @Composable
 fun ImageButton(playing: DrawableResource, modifier: Modifier = Modifier, onClick: () -> Unit) {
-    Image(imageResource(playing), null, modifier.clickable { onClick() })
+    Image(
+        imageResource(playing),
+        null,
+        modifier.clickable { onClick() },
+        colorFilter = ColorFilter.tint(Colors.objectPrimary)
+    )
 }
 
 @OptIn(ExperimentalResourceApi::class)
@@ -301,7 +309,7 @@ fun OptionsPane(state: DenpaState) {
     var showTrackBarWin by remember { mutableStateOf(settings.showTrackProgressBar) }
     var discordIntegration by remember { mutableStateOf(settings.discordIntegration) }
     var japaneseTitle by remember { mutableStateOf(settings.japaneseTitle) }
-    var darkTheme by remember { mutableStateOf(settings.darkTheme) }
+    val theme = settings.theme
     var alwaysOnTop by remember { mutableStateOf(settings.alwaysOnTop) }
 
     Column(
@@ -345,13 +353,31 @@ fun OptionsPane(state: DenpaState) {
         }
 
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("Dark theme", color = Colors.textPrimary)
-            Switch(darkTheme, {
-                darkTheme = it
-                settings.darkTheme = it
-                saveSettings(settings)
-                state.settings = loadSettings()
-            }, colors = SwitchDefaults.colors(checkedThumbColor = Colors.objectPrimary))
+            Text("Theme", color = Colors.textPrimary)
+            RadioButton(
+                theme == Themes.WHITE,
+                colors = RadioButtonDefaults.colors(Color.LightGray, Color.LightGray),
+                onClick = {
+                    settings.theme = Themes.WHITE
+                    saveSettings(settings)
+                    state.settings = loadSettings()
+                })
+            RadioButton(
+                theme == Themes.VIOL,
+                colors = RadioButtonDefaults.colors(Color.Black, Color.Black),
+                onClick = {
+                    settings.theme = Themes.VIOL
+                    saveSettings(settings)
+                    state.settings = loadSettings()
+                })
+            RadioButton(
+                theme == Themes.PINK,
+                colors = RadioButtonDefaults.colors(Colors.pink1, Colors.pink1),
+                onClick = {
+                    settings.theme = Themes.PINK
+                    saveSettings(settings)
+                    state.settings = loadSettings()
+                })
         }
 
         Row(verticalAlignment = Alignment.CenterVertically) {
@@ -505,22 +531,19 @@ fun PlaylistButtons(state: DenpaState, modifier: Modifier = Modifier) {
             color = Colors.textPrimary
         )
 //        }
-        Image(imageResource(Res.drawable.playlists), "Manage playlists", Modifier.clickable {
+        ImageButton(Res.drawable.playlists, onClick = {
             state.showSongUrlInput = false
             state.showOptionsPane = false
             state.showPlaylistsPane = !state.showPlaylistsPane
         })
-        Image(imageResource(Res.drawable.url), "Add tracks by url", Modifier.clickable {
+        ImageButton(Res.drawable.url, onClick = {
             state.showPlaylistsPane = false
             state.showOptionsPane = false
             state.showSongUrlInput = !state.showSongUrlInput
         })
-        Image(
-            imageResource(Res.drawable.folder),
-            "Add tracks from folder",
-            modifier = Modifier.clickable {
-                showFilePicker.value = true
-            })
+        ImageButton(Res.drawable.folder, onClick = {
+            showFilePicker.value = true
+        })
     }
 }
 
@@ -724,18 +747,15 @@ fun TopPanel(state: DenpaState, exitApp: () -> Unit, minimize: () -> Unit) {
 
         Row(modifier = Modifier.align(Alignment.TopEnd)) {
             Row {
-                Image(
-                    imageResource(Res.drawable.minimize_window),
-                    null,
-                    modifier = Modifier.size(25.dp).clickable {
+                ImageButton(Res.drawable.minimize_window,
+                    modifier = Modifier.size(25.dp),
+                    onClick = {
                         minimize()
                     }
                 )
-
-                Image(
-                    imageResource(Res.drawable.menu),
-                    null,
-                    modifier = Modifier.size(25.dp).clickable {
+                ImageButton(Res.drawable.menu,
+                    modifier = Modifier.size(25.dp),
+                    onClick = {
                         state.showPlaylistsPane = false
                         state.showSongUrlInput = false
                         state.showOptionsPane = !state.showOptionsPane

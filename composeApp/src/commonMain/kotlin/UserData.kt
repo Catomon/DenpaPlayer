@@ -39,7 +39,7 @@ class UserSettings(
     var showTrackProgressBar: Boolean = true,
     var discordIntegration: Boolean = true,
     var japaneseTitle: Boolean = false,
-    var darkTheme: Boolean = false,
+    var theme: String = Themes.WHITE,
     var alwaysOnTop: Boolean = false
 )
 

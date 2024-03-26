@@ -35,9 +35,7 @@ import audio.discordRichDisabled
 import denpaplayer.composeapp.generated.resources.BadComic_Regular
 import denpaplayer.composeapp.generated.resources.Res
 import denpaplayer.composeapp.generated.resources.denpa
-import denpaplayer.composeapp.generated.resources.pause
 import denpaplayer.composeapp.generated.resources.pause_icon
-import denpaplayer.composeapp.generated.resources.play
 import denpaplayer.composeapp.generated.resources.play_icon
 import net.arikia.dev.drpc.DiscordRPC
 import org.jetbrains.compose.resources.ExperimentalResourceApi
@@ -106,7 +104,11 @@ fun ApplicationScope.PlayerWindow(
 
         discordRichDisabled = !setts.discordIntegration
 
-        if (setts.darkTheme) Colors.darkTheme() else Colors.whiteTheme()
+        when (setts.theme) {
+            Themes.WHITE -> Colors.whiteTheme()
+            Themes.VIOL -> Colors.darkTheme()
+            Themes.PINK -> Colors.pinkTheme()
+        }
 
         title = if (denpaState.settings.japaneseTitle) appNameJp else appNameEng
     }
@@ -131,7 +133,7 @@ fun ApplicationScope.PlayerWindow(
         DenpaScreen(
             denpaState,
             Modifier.fillMaxSize()
-                .border(1.8.dp, Color.Black, RoundedCornerShape(10.dp))
+                .border(1.8.dp, Colors.objectPrimary, RoundedCornerShape(10.dp))
                 .background(Colors.backgroundPrimary)
                 .onGloballyPositioned {
                     denpaState.height = it.size.height

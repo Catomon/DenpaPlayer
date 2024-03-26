@@ -60,8 +60,8 @@ android {
         applicationId = "com.github.catomon.denpaplayer"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
-        versionCode = 3
-        versionName = "1.1.3"
+        versionCode = 5
+        versionName = "1.1.5"
     }
     packaging {
         resources {
@@ -94,7 +94,7 @@ compose.desktop {
         nativeDistributions {
             targetFormats(TargetFormat.Msi) //TargetFormat.Dmg,, TargetFormat.Deb
             packageName = "DenpaPlayer"
-            packageVersion = "1.1.3"
+            packageVersion = "1.1.5"
 
             modules("java.compiler", "java.instrument", "java.naming", "java.scripting", "java.security.jgss", "java.sql", "jdk.management", "jdk.unsupported")
 

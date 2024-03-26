@@ -1,5 +1,6 @@
 package audio
 
+import appName
 import appNameEng
 import com.sedmelluq.discord.lavaplayer.track.AudioTrack
 import denpaplayer.composeapp.generated.resources.Res
@@ -15,6 +16,7 @@ import org.jetbrains.compose.resources.DrawableResource
 import org.jetbrains.compose.resources.ExperimentalResourceApi
 
 var discordRichDisabled = !loadSettings().discordIntegration
+var showSongDetails = true
 
 fun startDiscordRich() {
     DiscordRPC.discordInitialize("1211665087912484922", DiscordEventHandlers(), true)
@@ -72,11 +74,12 @@ val singers: Array<Singer> = arrayOf(
     Singer("Momobako", "桃箱"),
     Singer("MOSAIC.WAV"),
     Singer("nayuta"),
-    Singer("yuu", "Installing!!!"),
+    Singer("Installing!!!").icons("yuu"),
     Singer("東方", "Touhou").icons("touhou", "touhou_2", "touhou_3"),
     Singer("Mili"),
     Singer("The Living Tombstone"),
-    Singer("GLAD VALAKAS", "BLEAK FUFEL", "Glad Valakas", "Bleak Fufel", "Глад Валакас")
+    Singer("GLAD VALAKAS", "BLEAK FUFEL", "Glad Valakas", "Bleak Fufel", "Глад Валакас"),
+    Singer("Blue Stahli")
 )
 
 private const val defaultSingerName: String = appNameEng
@@ -120,7 +123,7 @@ fun discordRich(rich: Rich, track: AudioTrack?) {
         when (rich) {
             Rich.IDLE -> {
                 largeImageKey = "denpa"
-                largeImageText = appNameEng
+                largeImageText = appName
                 smallImageKey = "idle"
                 smallImageText = "Idle"
                 details = "Idle"
@@ -131,8 +134,12 @@ fun discordRich(rich: Rich, track: AudioTrack?) {
                 largeImageText = singerName
                 smallImageKey = "playing"
                 smallImageText = "Listening"
-                details = "$songName"
-                endTimestamp = System.currentTimeMillis() + (track?.duration ?: Long.MAX_VALUE) - (track?.position ?: 0L)
+
+                if (showSongDetails) {
+                    details = "$songName"
+                    endTimestamp = System.currentTimeMillis() + (track?.duration
+                        ?: Long.MAX_VALUE) - (track?.position ?: 0L)
+                }
             }
 
             Rich.PAUSED -> {
@@ -140,7 +147,8 @@ fun discordRich(rich: Rich, track: AudioTrack?) {
                 largeImageText = singerName
                 smallImageKey = "paused"
                 smallImageText = "Paused"
-                details = "$songName"
+                if (showSongDetails)
+                    details = "$songName"
             }
         }
     }
