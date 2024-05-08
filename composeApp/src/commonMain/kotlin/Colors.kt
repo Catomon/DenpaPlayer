@@ -96,7 +96,7 @@ object Colors {
     fun whiteTheme() {
         backgroundPrimary = Color.White
         surfacePrimary = slightlyTransparentWhite
-        surfaceSecondary = halfTransparentWhite
+        surfaceSecondary = lightBlue.copy(alpha = 0.90f)
         specialPrimary = pink
         specialSecondary = lightBlue
         specialPrimaryTransparent = lightPinkHalfTransparent

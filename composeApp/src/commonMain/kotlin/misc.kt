@@ -15,10 +15,6 @@ import kotlin.math.roundToInt
 
 expect fun <T : DenpaTrack> createDenpaTrack(uri: String, name: String): T
 
-fun openItchIo() {
-    openInBrowser(URI.create("https://serascout.itch.io/denpaplayer"))
-}
-
 fun openGitHub() {
     openInBrowser(URI.create("https://github.com/Catomon"))
 }

@@ -3,6 +3,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.MutableState
 import audio.DenpaPlayer
 import audio.DenpaTrack
+import audio.DenpaTrackAndy
 import com.darkrockstudios.libraries.mpfilepicker.MultipleFilePicker
 import com.github.catomon.denpaplayer.MainActivity
 import java.io.File
@@ -10,11 +11,11 @@ import java.io.File
 actual val userDataFolder: File get() = File((playerContext() as MainActivity).filesDir.toURI())
 
 actual fun <T : DenpaTrack> createDenpaTrack(uri: String, name: String): T {
-    TODO("Not yet implemented")
+    return DenpaTrackAndy(uri = uri, name = name) as T
 }
 
 @Composable
-actual fun DenpaFilePicker(show: MutableState<Boolean>, denpaPlayer: DenpaPlayer<DenpaTrack>, currentPlaylistName: String) {
+fun DenpaFilePicker(show: MutableState<Boolean>, denpaPlayer: DenpaPlayer<DenpaTrack>, currentPlaylistName: String) {
     val fileType = listOf("mp3")
     MultipleFilePicker(show = show.value, fileExtensions = fileType) { files ->
         show.value = false

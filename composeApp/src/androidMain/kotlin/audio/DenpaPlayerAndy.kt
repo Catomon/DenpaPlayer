@@ -7,23 +7,37 @@ import androidx.media3.exoplayer.ExoPlayer
 import java.util.UUID
 
 /** Under construct */
-class AndyDenpaTrack(
+class DenpaTrackAndy(
     override val uri: String,
     override val id: String = UUID.randomUUID().toString(),
-    val mediaItem: MediaItem = MediaItem.Builder().setUri(uri).setMediaId(id).build(),
+    override var author: String = "",
+    override var name: String = "",
+    override var duration: Long = Long.MAX_VALUE
 ) : DenpaTrack {
 
-    override val author: String get() =  mediaItem.mediaMetadata.artist.toString()
-    override val name: String get() =  mediaItem.mediaMetadata.title.toString()
+    var mediaItem: MediaItem? = null
+    set(value) {
+        field = value
+        author =  mediaItem?.mediaMetadata?.artist.toString() ?: ""
+        name = mediaItem?.mediaMetadata?.title.toString() ?: ""
+        duration = Long.MAX_VALUE
+    }
+
+    fun createMediaItem() : MediaItem {
+        mediaItem = MediaItem.Builder().setUri(uri).setMediaId(id).build()
+
+        return mediaItem!!
+    }
 
     constructor(mediaItem: MediaItem) : this(
         mediaItem.localConfiguration?.uri.toString(),
         mediaItem.mediaId,
-        mediaItem
-    )
+    ) {
+        this.mediaItem = mediaItem
+    }
 }
 
-class DenpaPlayerAndy(context: Context) : BaseDenpaPlayer<AndyDenpaTrack>() {
+class DenpaPlayerAndy(context: Context) : BaseDenpaPlayer<DenpaTrackAndy>() {
     private val player: ExoPlayer = ExoPlayer.Builder(context).build()
     override val position: Long get() = player.contentPosition
 
@@ -42,11 +56,11 @@ class DenpaPlayerAndy(context: Context) : BaseDenpaPlayer<AndyDenpaTrack>() {
 
     override fun load(uris: List<String>) {
         uris.forEach { uri ->
-            addToPlaylist(AndyDenpaTrack(MediaItem.fromUri(uri)))
+            addToPlaylist(DenpaTrackAndy(MediaItem.fromUri(uri)))
         }
     }
 
-    override fun play(track: AndyDenpaTrack): Boolean {
+    override fun play(track: DenpaTrackAndy): Boolean {
         if (!player.isCommandAvailable(Player.COMMAND_STOP)) return false
 
         player.stop()
@@ -54,23 +68,23 @@ class DenpaPlayerAndy(context: Context) : BaseDenpaPlayer<AndyDenpaTrack>() {
         if (!player.isCommandAvailable(Player.COMMAND_CHANGE_MEDIA_ITEMS)) return false
         if (!player.isCommandAvailable(Player.COMMAND_PLAY_PAUSE)) return false
 
-        player.addMediaItem(track.mediaItem)
+        player.addMediaItem(track.mediaItem ?: track.createMediaItem())
 
         if (player.isCommandAvailable(Player.COMMAND_PREPARE))
             player.prepare()
 
-        //player.play() // called in resume() from super.play()
+        //player.play() is being called in resume() in super.play()
 
         return super.play(track)
     }
 
-    override fun prevTrack(): AndyDenpaTrack? {
+    override fun prevTrack(): DenpaTrackAndy? {
         val nextDenpaTrack = super.prevTrack()
 
         player.stop()
 
         if (nextDenpaTrack != null) {
-            player.addMediaItem(nextDenpaTrack.mediaItem)
+            player.addMediaItem(nextDenpaTrack.mediaItem ?: nextDenpaTrack.createMediaItem())
             player.prepare()
             player.play()
         }
@@ -78,12 +92,12 @@ class DenpaPlayerAndy(context: Context) : BaseDenpaPlayer<AndyDenpaTrack>() {
         return nextDenpaTrack
     }
 
-    override fun nextTrack(): AndyDenpaTrack? {
+    override fun nextTrack(): DenpaTrackAndy? {
         val nextDenpaTrack = super.nextTrack()
 
         player.stop()
         if (nextDenpaTrack != null) {
-            player.addMediaItem(nextDenpaTrack.mediaItem)
+            player.addMediaItem(nextDenpaTrack.mediaItem ?: nextDenpaTrack.createMediaItem())
             player.prepare()
             player.play()
         }
@@ -91,15 +105,15 @@ class DenpaPlayerAndy(context: Context) : BaseDenpaPlayer<AndyDenpaTrack>() {
         return nextDenpaTrack
     }
 
-    override fun addToPlaylist(track: AndyDenpaTrack) {
+    override fun addToPlaylist(track: DenpaTrackAndy) {
         super.addToPlaylist(track)
     }
 
-    override fun removeFromPlaylist(track: AndyDenpaTrack) {
+    override fun removeFromPlaylist(track: DenpaTrackAndy) {
         super.removeFromPlaylist(track)
     }
 
-    override fun queue(track: AndyDenpaTrack) {
+    override fun queue(track: DenpaTrackAndy) {
         super.queue(track)
 
         //player.addMediaItem(track.mediaItem)

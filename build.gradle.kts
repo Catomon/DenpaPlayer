@@ -6,4 +6,5 @@ plugins {
     alias(libs.plugins.jetbrainsCompose) apply false
     alias(libs.plugins.kotlinMultiplatform) apply false
     kotlin("plugin.serialization") version "1.9.22" apply true
+    alias(libs.plugins.jetbrainsKotlinAndroid) apply false
 }
