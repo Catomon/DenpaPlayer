@@ -40,7 +40,8 @@ class UserSettings(
     var discordIntegration: Boolean = true,
     var japaneseTitle: Boolean = false,
     var theme: String = Themes.WHITE,
-    var alwaysOnTop: Boolean = false
+    var alwaysOnTop: Boolean = false,
+    var showSingerIcons: Boolean = false,
 )
 
 //Playlists

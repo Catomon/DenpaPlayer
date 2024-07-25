@@ -30,7 +30,8 @@ kotlin {
             implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
             implementation("com.darkrockstudios:mpfilepicker:3.1.0")
             implementation("com.github.Vatuu:discord-rpc:1.6.2")
-            implementation("dev.arbjerg:lavaplayer:2.1.1")
+            implementation("dev.arbjerg:lavaplayer:2.1.2")
+            implementation("com.github.goxr3plus:java-stream-player:9.0.4")
 
             implementation(compose.runtime)
             implementation(compose.foundation)
@@ -60,8 +61,8 @@ android {
         applicationId = "com.github.catomon.denpaplayer"
         minSdk = libs.versions.android.minSdk.get().toInt()
         targetSdk = libs.versions.android.targetSdk.get().toInt()
-        versionCode = 5
-        versionName = "1.1.5"
+        versionCode = 6
+        versionName = "1.1.6"
     }
     packaging {
         resources {
@@ -103,7 +104,7 @@ compose.desktop {
         nativeDistributions {
             targetFormats(TargetFormat.Msi) //TargetFormat.Dmg,, TargetFormat.Deb
             packageName = "DenpaPlayer"
-            packageVersion = "1.1.5"
+            packageVersion = "1.1.6"
 
             modules("java.compiler", "java.instrument", "java.naming", "java.scripting", "java.security.jgss", "java.sql", "jdk.management", "jdk.unsupported")
 

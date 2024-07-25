@@ -324,6 +324,7 @@ fun OptionsPane(state: DenpaState) {
     var showTrackBarWin by remember { mutableStateOf(settings.showTrackProgressBar) }
     var discordIntegration by remember { mutableStateOf(settings.discordIntegration) }
     var japaneseTitle by remember { mutableStateOf(settings.japaneseTitle) }
+    var showSingerIcons by remember { mutableStateOf(settings.showSingerIcons) }
     val theme = settings.theme
     var alwaysOnTop by remember { mutableStateOf(settings.alwaysOnTop) }
 
@@ -358,14 +359,24 @@ fun OptionsPane(state: DenpaState) {
         }
 
         Row(verticalAlignment = Alignment.CenterVertically) {
-            Text("Japanese title", color = Colors.textPrimary)
-            Switch(japaneseTitle, {
-                japaneseTitle = it
-                settings.japaneseTitle = it
+            Text("Singer icons", color = Colors.textPrimary)
+            Switch(showSingerIcons, {
+                showSingerIcons = it
+                settings.showSingerIcons = it
                 saveSettings(settings)
                 state.settings = loadSettings()
             }, colors = SwitchDefaults.colors(checkedThumbColor = Colors.objectPrimary))
         }
+
+//        Row(verticalAlignment = Alignment.CenterVertically) {
+//            Text("Japanese title", color = Colors.textPrimary)
+//            Switch(japaneseTitle, {
+//                japaneseTitle = it
+//                settings.japaneseTitle = it
+//                saveSettings(settings)
+//                state.settings = loadSettings()
+//            }, colors = SwitchDefaults.colors(checkedThumbColor = Colors.objectPrimary))
+//        }
 
         Row(verticalAlignment = Alignment.CenterVertically) {
             Text("Theme", color = Colors.textPrimary)
@@ -551,7 +562,7 @@ fun PlaylistButtons(state: DenpaState, modifier: Modifier = Modifier) {
         ImageButton(Res.drawable.url, onClick = {
             state.showPlaylistsPane = false
             state.showOptionsPane = false
-            state.showSongUrlInput = !state.showSongUrlInput
+            state.showSongUrlInput = false //!state.showSongUrlInput todo
         })
         ImageButton(Res.drawable.folder, onClick = {
             showFilePicker.value = true

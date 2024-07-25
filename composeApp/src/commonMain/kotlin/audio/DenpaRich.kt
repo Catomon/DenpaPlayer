@@ -110,6 +110,8 @@ fun registeredSingerBySongName(songName: String = defaultSingerName): Singer {
     return denpaSinger
 }
 
+val hideSingerIcon = !loadSettings().showSingerIcons
+
 fun discordRich(rich: Rich, track: AudioTrack?) {
     if (discordRichDisabled) return
 
@@ -125,15 +127,15 @@ fun discordRich(rich: Rich, track: AudioTrack?) {
                 largeImageKey = "denpa"
                 largeImageText = appName
                 smallImageKey = "idle"
-                smallImageText = "Idle"
-                details = "Idle"
+                smallImageText = "待機中"
+                details = "待機中" //"Idle"
             }
 
             Rich.LISTENING -> {
-                largeImageKey = singerIconId
-                largeImageText = singerName
+                largeImageKey = if (hideSingerIcon) "denpa" else singerIconId
+                largeImageText = if (hideSingerIcon) appName else singerName
                 smallImageKey = "playing"
-                smallImageText = "Listening"
+                smallImageText = "視聴中" // "Listening"
 
                 if (showSongDetails) {
                     details = "$songName"
@@ -143,10 +145,10 @@ fun discordRich(rich: Rich, track: AudioTrack?) {
             }
 
             Rich.PAUSED -> {
-                largeImageKey = singerIconId
-                largeImageText = singerName
+                largeImageKey = if (hideSingerIcon) "denpa" else singerIconId
+                largeImageText = if (hideSingerIcon) appName else singerName
                 smallImageKey = "paused"
-                smallImageText = "Paused"
+                smallImageText = "一時停止中" // "Paused"
                 if (showSongDetails)
                     details = "$songName"
             }

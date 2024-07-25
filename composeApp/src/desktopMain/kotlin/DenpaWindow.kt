@@ -43,8 +43,13 @@ import org.jetbrains.compose.resources.Font
 import org.jetbrains.compose.resources.painterResource
 import java.awt.Dimension
 import java.awt.Toolkit
+import java.awt.datatransfer.DataFlavor
+import java.awt.dnd.DnDConstants
+import java.awt.dnd.DropTarget
+import java.awt.dnd.DropTargetDropEvent
 import java.awt.event.ComponentAdapter
 import java.awt.geom.RoundRectangle2D
+import java.io.File
 
 @OptIn(ExperimentalResourceApi::class, ExperimentalComposeUiApi::class)
 @Composable
@@ -93,7 +98,6 @@ fun ApplicationScope.PlayerWindow(
     denpaState: DenpaState,
     windowState: WindowState
 ) {
-
     var title by remember { mutableStateOf(if (denpaState.settings.japaneseTitle) appNameJp else appNameEng) }
 
     LaunchedEffect(denpaState.settings) {
@@ -143,6 +147,43 @@ fun ApplicationScope.PlayerWindow(
             WindowDraggableArea {
                 TopPanel(denpaState, exitApp, minimize)
             }
+        }
+
+        LaunchedEffect(null) {
+            val target = object : DropTarget() {
+                @Synchronized
+                override fun drop(evt: DropTargetDropEvent) {
+                    try {
+                        evt.acceptDrop(DnDConstants.ACTION_REFERENCE)
+                        val droppedFiles = evt
+                            .transferable.getTransferData(
+                                DataFlavor.javaFileListFlavor
+                            ) as List<File>
+
+                        val musicFiles = ArrayList<File>(1000)
+                        fun filterMusicFiles(files: List<File>) {
+                            for (file in files) {
+                                if (file.isDirectory) {
+                                    file.listFiles()?.let { filterMusicFiles(it.toList()) }
+                                } else {
+                                    if (file.extension == "mp3" || file.extension == "wav") {
+                                        musicFiles.add(file)
+                                    }
+                                }
+                            }
+                        }
+
+                        filterMusicFiles(droppedFiles)
+
+                        denpaState.denpaPlayer.load(musicFiles.map { it.path })
+                        savePlaylist(denpaState.currentPlaylistName, denpaState.denpaPlayer.playlist.value.toTypedArray())
+                    } catch (ex: Exception) {
+                        ex.printStackTrace()
+                    }
+                }
+            }
+
+            window.contentPane.dropTarget = target
         }
     }
 }
