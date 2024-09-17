@@ -74,7 +74,7 @@ fun ApplicationScope.DenpaApp() {
                 painterResource(Res.drawable.pause_icon)
             else
                 painterResource(Res.drawable.play_icon),
-            tooltip = "DenpaPlayer",
+            tooltip = appName,
             onAction = {
                 if (denpaState.playState == DenpaPlayer.PlayState.PLAYING)
                     denpaState.denpaPlayer.pause()

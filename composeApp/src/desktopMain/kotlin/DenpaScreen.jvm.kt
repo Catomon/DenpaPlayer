@@ -240,7 +240,14 @@ fun Player(
 //        )
 
         val alpha by animateFloatAsState(if (state.height > 108) 1f else 0f)
-        Playlist(state, Modifier.align(Alignment.CenterStart).fillMaxSize().alpha(alpha))
+
+        if (state.playlist.isEmpty()) {
+            Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text("Drop files or folders here", textAlign = TextAlign.Center, color = Color.Gray)
+            }
+        } else {
+            Playlist(state, Modifier.align(Alignment.CenterStart).fillMaxSize().alpha(alpha))
+        }
 
         Box(Modifier.fillMaxSize().padding(bottom = 55.dp)) {
             AnimatedVisibility(
@@ -426,9 +433,10 @@ fun OptionsPane(state: DenpaState) {
                 " ",
                 color = Colors.textPrimary,
                 fontStyle = FontStyle.Italic,
-               /* modifier = Modifier.clickable {
+                /* modifier = Modifier.clickable {
 
-                }*/)
+                 }*/
+            )
 
             Button(
                 { exitProcess(0) },
